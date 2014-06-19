@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">NextToYouAndroid</string>
+    <string name="google_maps_api_key">AIzaSyB_4GQ9NplQYvxMbzMATq2m4cxmhC_0V50</string>
+    
+    <string name="action_settings">Settings</string>
+
+    <string-array name="screens_array">
+        <item>screen1</item>
+        <item>screen2</item>
+        <item>map fragment</item>
+    </string-array>
+
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+    <string name="action_websearch">Web search</string>
+
+</resources>
