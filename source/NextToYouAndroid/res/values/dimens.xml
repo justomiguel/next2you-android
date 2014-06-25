@@ -4,4 +4,19 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
+    <dimen name="text_size_info">14sp</dimen>
+    <dimen name="text_size_text">16sp</dimen>
+    <dimen name="text_size_title">18sp</dimen>
+    <dimen name="text_size_login_fields">21sp</dimen>
+
+    <dimen name="login_screen_header_height">60dp</dimen>
+    
+    <!-- sliding menu -->
+    <dimen name="slidingmenuWidth">15dp</dimen>
+	<dimen name="slidingmenuOffset">60dp</dimen>
+	<dimen name="slidingmenuOptionHeight">60dp</dimen>
+	<dimen name="slidingmenuOptionPaddingLeft">20dp</dimen>
+	
+	<!-- Map -->
+	<dimen name="map_my_location_radius">180dp</dimen>
 </resources>

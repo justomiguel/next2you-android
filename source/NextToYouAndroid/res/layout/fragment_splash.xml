@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/splash" >
+
+    <ImageView
+        android:id="@+id/splash_title_img"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:scaleType="center"
+        android:src="@drawable/splash_title" />
+
+    <TextView
+        android:id="@+id/travel_company_title"
+        style="@style/LabelTitleWrap"
+        android:layout_width="match_parent"
+        android:layout_below="@id/splash_title_img"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:text="@string/splash_travel_in_company" />
+
+    <TextView
+        android:id="@+id/app_version_info"
+        style="@style/LabelBaseWrap"
+        android:layout_width="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="20dp"
+        android:gravity="center"
+        android:text="@string/splash_version_info"
+        android:textColor="@color/dark_red" />
+
+</RelativeLayout>

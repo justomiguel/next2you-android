@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="transparent">#00ffffff</color>
+    <color name="white">#ffffff</color>
+    <color name="dark_red">#bd3f63</color>
+    <color name="login_background">#edebe7</color>
+    <color name="purple">#693690</color>
+    <color name="marker_radius_purple">#33693690</color>
+    <color name="grapefruit">#f8587d</color>
+    <color name="grapefruit_focus">#bf2548</color>
+    <color name="light_purple_hint">#9e7eb3</color>
+</resources>

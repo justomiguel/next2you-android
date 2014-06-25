@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/login_background" >
+
+    <ImageView
+        android:id="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/login_screen_header_height"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:background="@color/purple"
+        android:contentDescription="@string/logo_login"
+        android:paddingBottom="20dp"
+        android:paddingTop="20dp"
+        android:scaleType="center"
+        android:src="@drawable/next_to_you_logo_small" />
+
+    <TextView
+        android:id="@+id/login_screen_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title"
+        android:background="@color/grapefruit"
+        android:gravity="center"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text="@string/login_title"
+        android:textColor="@color/white"
+        android:textIsSelectable="false"
+        android:textSize="@dimen/text_size_title" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/login_screen_title"
+        android:layout_centerHorizontal="true" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <!-- Login form fields -->
+
+            <EditText
+                android:id="@+id/enter_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginTop="40dp"
+                android:inputType="textEmailAddress"
+                android:background="@drawable/edit_text_background"
+                android:hint="@string/login_e_mail"
+                android:maxLines="1"
+                android:textColor="@color/purple"
+                android:textColorHint="@color/light_purple_hint"
+                android:textSize="@dimen/text_size_login_fields" />
+
+            <EditText
+                android:id="@+id/enter_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_marginTop="40dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="@string/login_password"
+                android:inputType="textPassword"
+                android:maxLines="1"
+                android:textColor="@color/purple"
+                android:textColorHint="@color/light_purple_hint"
+                android:textSize="@dimen/text_size_login_fields" />
+
+            <!-- Forgotten password -->
+
+            <Button
+                android:id="@+id/forgotten_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@color/transparent"
+                android:gravity="center"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                android:text="@string/login_forgotten_password"
+                android:textColor="@color/grapefruit"
+                android:textIsSelectable="false"
+                android:textSize="@dimen/text_size_info" />
+
+            <!-- Login button -->
+
+            <Button
+                android:id="@+id/login_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/login_btn_selector"
+                android:gravity="center"
+                android:paddingBottom="5dp"
+                android:paddingTop="5dp"
+                android:text="@string/login"
+                android:textColor="@color/white"
+                android:textIsSelectable="false"
+                android:textSize="@dimen/text_size_login_fields" />
+        </LinearLayout>
+    </ScrollView>
+
+    <ImageView
+        android:id="@+id/city"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:scaleType="centerCrop"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/login_image_bottom"
+        android:src="@drawable/city" />
+
+</RelativeLayout>

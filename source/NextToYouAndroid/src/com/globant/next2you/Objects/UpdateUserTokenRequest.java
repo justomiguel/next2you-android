@@ -1,4 +1,4 @@
-package com.globant.next2you.Objects;
+package com.globant.next2you.objects;
 
 public class UpdateUserTokenRequest {
 

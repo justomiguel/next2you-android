@@ -4,25 +4,27 @@ import java.io.IOException;
 
 import org.apache.http.entity.StringEntity;
 
+import android.util.Log;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.globant.next2you.Objects.CreateCommunityRequest;
-import com.globant.next2you.Objects.CreateTravelRequest;
-import com.globant.next2you.Objects.CreateTravelResponse;
-import com.globant.next2you.Objects.CreateUserTokenRequest;
-import com.globant.next2you.Objects.CreateUserTokenResponse;
-import com.globant.next2you.Objects.GetCummunitiesResponse;
-import com.globant.next2you.Objects.ListDestinationsResponse;
-import com.globant.next2you.Objects.ListPeopleResponse;
-import com.globant.next2you.Objects.PasswordResetRequest;
-import com.globant.next2you.Objects.Person;
-import com.globant.next2you.Objects.RegisterUserRequest;
-import com.globant.next2you.Objects.ResetCurrentUserPasswordRequest;
-import com.globant.next2you.Objects.RetrieveApplicationVersionResponse;
-import com.globant.next2you.Objects.RetrievePendingTravelsResponse;
-import com.globant.next2you.Objects.UpdateUserTokenRequest;
+import com.globant.next2you.objects.CreateCommunityRequest;
+import com.globant.next2you.objects.CreateTravelRequest;
+import com.globant.next2you.objects.CreateTravelResponse;
+import com.globant.next2you.objects.CreateUserTokenRequest;
+import com.globant.next2you.objects.CreateUserTokenResponse;
+import com.globant.next2you.objects.GetCummunitiesResponse;
+import com.globant.next2you.objects.ListDestinationsResponse;
+import com.globant.next2you.objects.ListPeopleResponse;
+import com.globant.next2you.objects.PasswordResetRequest;
+import com.globant.next2you.objects.Person;
+import com.globant.next2you.objects.RegisterUserRequest;
+import com.globant.next2you.objects.ResetCurrentUserPasswordRequest;
+import com.globant.next2you.objects.RetrieveApplicationVersionResponse;
+import com.globant.next2you.objects.RetrievePendingTravelsResponse;
+import com.globant.next2you.objects.UpdateUserTokenRequest;
 
 public class ApiServices {
-
+	private static final String TAG = "ApiServices";
 	private static final String API_URL = "http://next2you.apiary-mock.com/api/";
 
 	public static RetrieveApplicationVersionResponse retrieveApplicationVersion()
@@ -44,7 +46,8 @@ public class ApiServices {
 		query.setEntity(new StringEntity(jsonRequest));
 
 		String output = query.send("PUT");
-
+		
+		Log.d(TAG, "createOrUpdateUserToken result=" + output);
 		if (query.getResponseStatusCode() == 201) {
 			return new ObjectMapper().readValue(output,
 					CreateUserTokenResponse.class);
@@ -75,7 +78,9 @@ public class ApiServices {
 		query.setEntity(new StringEntity(jsonRequest));
 		query.send("PUT");
 
-		return query.getResponseStatusCode() == 200;
+		int code = query.getResponseStatusCode();
+		Log.d(TAG, "passwordReset resultcode=" + code + ";jsonRequest=" + jsonRequest);
+		return code == 200;
 	}
 
 	public static boolean resetCurrentUserPassword(String currentToken,
