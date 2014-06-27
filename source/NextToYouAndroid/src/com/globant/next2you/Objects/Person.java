@@ -1,6 +1,9 @@
 package com.globant.next2you.objects;
 
-public class Person {
+import com.google.android.gms.maps.model.LatLng;
+import com.google.maps.android.clustering.ClusterItem;
+
+public class Person implements ClusterItem{
 	private int personId;
 	private String name;
 	private String email;
@@ -22,7 +25,8 @@ public class Person {
 	private String currentCommunity;
 	private boolean hasCar;
 	private boolean hasActiveTravel;
-
+	private LatLng latLng;
+	
 	public Person() {
 	}
 
@@ -223,6 +227,15 @@ public class Person {
 
 	public void setHasActiveTravel(boolean hasActiveTravel) {
 		this.hasActiveTravel = hasActiveTravel;
+	}
+
+	@Override
+	public LatLng getPosition() {
+		return latLng;
+	}
+
+	public void setLatLng(LatLng latLng) {
+		this.latLng = latLng;
 	}
 
 }

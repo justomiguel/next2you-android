@@ -26,6 +26,25 @@
         android:scaleType="center"
         android:src="@drawable/menu_open" />
 
+    <ImageView
+        android:id="@+id/message_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/login_screen_header_height"
+        android:layout_alignParentRight="true"
+        android:scaleType="center"
+        android:contentDescription="@string/messages"
+        android:layout_marginRight="20dp"
+        android:src="@drawable/message" />
+    
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/login_screen_header_height"
+        android:layout_toLeftOf="@id/message_icon"
+        android:scaleType="center"
+        android:contentDescription="@string/messages"
+        android:layout_marginRight="20dp"
+        android:src="@drawable/mail_icon" />
+
     <TextView
         android:id="@+id/subtitle"
         android:layout_width="match_parent"

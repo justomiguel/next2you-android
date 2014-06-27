@@ -19,4 +19,6 @@
 	
 	<!-- Map -->
 	<dimen name="map_my_location_radius">180dp</dimen>
+	<dimen name="map_cluster_marker_height">35dp</dimen>
+	<dimen name="circle_radius">15dp</dimen>
 </resources>

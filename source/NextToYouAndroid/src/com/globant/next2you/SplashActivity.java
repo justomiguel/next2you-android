@@ -33,7 +33,7 @@ public class SplashActivity extends FragmentActivity {
 				startActivity(i);
 				finish();
 			}
-		}, 500);
+		}, 3000);
 	}
 
 }

@@ -10,12 +10,17 @@ public class UIUtils {
 
 	public static void prepareTextView(Context ctx, TextView tv) {
 		try {
-			Typeface font = Typeface.createFromAsset(ctx.getAssets(),
-					Constants.APP_FONT_NAME);
+			Typeface font = getAppTypeFace(ctx);
 			tv.setTypeface(font);
 		} catch (Exception e) {
 			Log.e(TAG, "", e);
 		}
+	}
+
+	public static Typeface getAppTypeFace(Context ctx) {
+		Typeface font = Typeface.createFromAsset(ctx.getAssets(),
+				Constants.APP_FONT_NAME);
+		return font;
 	}
 
 }

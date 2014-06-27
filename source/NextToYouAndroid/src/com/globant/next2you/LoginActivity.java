@@ -3,11 +3,13 @@ package com.globant.next2you;
 import java.util.concurrent.Callable;
 
 import com.globant.next2you.async.UICallback;
+import com.globant.next2you.fragments.NotificationDialog;
 import com.globant.next2you.net.ApiServices;
 import com.globant.next2you.objects.CreateUserTokenRequest;
 import com.globant.next2you.objects.CreateUserTokenResponse;
 import com.globant.next2you.objects.PasswordResetRequest;
 import com.globant.next2you.util.UIUtils;
+import com.globant.next2you.util.Util;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,7 +21,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class LoginActivity extends FragmentActivity {
 
@@ -68,7 +69,7 @@ public class LoginActivity extends FragmentActivity {
 
 		TextView title = (TextView) findViewById(R.id.title_forgotten_pass);
 		UIUtils.prepareTextView(this, title);
-		
+
 		TextView descr = (TextView) findViewById(R.id.forgotten_pass_descr);
 		UIUtils.prepareTextView(this, descr);
 
@@ -80,8 +81,8 @@ public class LoginActivity extends FragmentActivity {
 
 		Button sendRequest = (Button) findViewById(R.id.request_forgotten_pass_change);
 		UIUtils.prepareTextView(this, sendRequest);
-		sendRequest
-				.setOnClickListener(getSendForgottenPasswordRequest(emailForgottenPass, sendRequest));
+		sendRequest.setOnClickListener(getSendForgottenPasswordRequest(
+				emailForgottenPass, sendRequest));
 	}
 
 	private OnClickListener getSendForgottenPasswordRequest(
@@ -92,9 +93,12 @@ public class LoginActivity extends FragmentActivity {
 			public void onClick(View v) {
 				final String email = emailForgottenPass.getText().toString();
 				if (email.isEmpty()) {
-					Toast.makeText(LoginActivity.this,
-							R.string.login_empty_email, Toast.LENGTH_SHORT)
-							.show();
+					showNotification(R.string.login_empty_email);
+					return;
+				}
+				boolean isValid = Util.isValidEmail(email);
+				if(!isValid) {
+					showNotification(R.string.invalid_email);
 					return;
 				}
 				sendRequest.setEnabled(false);
@@ -114,8 +118,7 @@ public class LoginActivity extends FragmentActivity {
 						boolean resetOk = (Boolean) result;
 						int msgId = resetOk ? R.string.login_reset_ok
 								: R.string.login_reset_failed;
-						Toast.makeText(LoginActivity.this, msgId,
-								Toast.LENGTH_LONG).show();
+						showNotification(msgId);
 					}
 				});
 			}
@@ -132,7 +135,8 @@ public class LoginActivity extends FragmentActivity {
 	}
 
 	private OnClickListener getLoginBtnClickHandler(
-			final TextView emailEditText, final TextView passEditText, final Button loginBtn) {
+			final TextView emailEditText, final TextView passEditText,
+			final Button loginBtn) {
 		return new OnClickListener() {
 
 			@Override
@@ -140,24 +144,33 @@ public class LoginActivity extends FragmentActivity {
 				String email = emailEditText.getText().toString();
 				String pass = passEditText.getText().toString();
 				if (email.isEmpty()) {
-					Toast.makeText(LoginActivity.this,
-							R.string.login_empty_email, Toast.LENGTH_LONG)
-							.show();
+					showNotification(R.string.login_empty_email);
+					return;
+				}
+				
+				if(!Util.isValidEmail(email)) {
+					showNotification(R.string.invalid_email);
 					return;
 				}
 
 				if (pass.isEmpty()) {
-					Toast.makeText(LoginActivity.this,
-							R.string.login_empty_pass, Toast.LENGTH_LONG)
-							.show();
+					showNotification(R.string.login_empty_pass);
 					return;
 				}
 				makeLoginRequest(email, pass, loginBtn);
 			}
 		};
 	}
+	
+	private void showNotification(int msgId) {
+		NotificationDialog notification = new NotificationDialog(
+				LoginActivity.this);
+		notification.setMessage(msgId);
+		notification.show();
+	}
 
-	private void makeLoginRequest(final String email, final String password, final Button loginBtn) {
+	private void makeLoginRequest(final String email, final String password,
+			final Button loginBtn) {
 		loginBtn.setText(R.string.login_progress);
 		loginBtn.setEnabled(false);
 		App.getTaskManager().assignNet(new Callable<Object>() {
@@ -183,8 +196,10 @@ public class LoginActivity extends FragmentActivity {
 					startActivity(i);
 					finish();
 				} else {
-					Toast.makeText(LoginActivity.this, R.string.login_failed,
-							Toast.LENGTH_LONG).show();
+					NotificationDialog notification = new NotificationDialog(
+							LoginActivity.this);
+					notification.setMessage(R.string.login_failed);
+					notification.show();
 				}
 			}
 		});

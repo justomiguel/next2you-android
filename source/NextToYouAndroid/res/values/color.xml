@@ -9,4 +9,10 @@
     <color name="grapefruit">#f8587d</color>
     <color name="grapefruit_focus">#bf2548</color>
     <color name="light_purple_hint">#9e7eb3</color>
+	<color name="notification_dialog_background">#edebe7</color>
+
+	<!-- clusters -->
+	<color name="red_marker">#eb5353</color>
+	<color name="green_marker">#3ac447</color>
+	<color name="black_marker">#000000</color>
 </resources>

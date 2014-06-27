@@ -3,7 +3,6 @@
 
     <string name="app_name">NextToYouAndroid</string>
     <string name="google_maps_api_key">AIzaSyB_4GQ9NplQYvxMbzMATq2m4cxmhC_0V50</string>
-    
     <string name="action_settings">Settings</string>
 
     <string-array name="screens_array">
@@ -15,34 +14,40 @@
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
     <string name="action_websearch">Web search</string>
-    <string name="splash_travel_in_company">Viajá en Compañía</string>
+    <string name="splash_travel_in_company">Travel accompanied</string>
     <string name="splash_version_info">Version 1.0\nPowered by Globant</string>
     <string name="login_image_bottom">Login image bottom</string>
     <string name="logo_login">Logo login</string>
     <string name="login_title">Login</string>
     <string name="login_e_mail">E-mail</string>
-    <string name="login_password">Contraseña</string>
-	<string name="login_forgotten_password">Olvidé la Contraseña</string>
-	<string name="login">Iniciar sesión</string>
-	<string name="login_progress">Logging in &#8230;</string>
-	<string name="login_empty_email">Please fill in your email</string>
-	<string name="login_empty_pass">Please fill in your password</string>
-	<string name="login_close_forgotten_password_screen">Close forgotten password screen</string>
-	<string name="login_retrieve_password">Recuperá tu contraseña</string>
-	<string name="login_forgotten_password_description">Ingreasa tu e-mail y te\nenviaremos las instrucciones\npara recuperar la\ncontraseña.</string>
-	<string name="login_send">Enviar</string>
-	<string name="login_reset_ok">Password reset successful</string>
-	<string name="login_reset_failed">Password reset failed</string>
-	<string name="login_failed">Login failed</string>
-	
-	
-	<!-- Sliding menu options -->
-	<string-array name="sliding_menu_opitions">
-	    <item>Home</item>
-	    <item>Radio de notificación</item>
-	    <item>Cambiar comunidad</item>
-	    <item>Mi perfil</item>
-	    <item>Cerrar sesión</item>
-	</string-array>
-	    <string name="main_content_community_globant">Comunidad Globant</string>
+    <string name="login_password">Password</string>
+    <string name="login_forgotten_password">Forgotten Password</string>
+    <string name="login">Login</string>
+    <string name="login_progress">Logging in &#8230;</string>
+    <string name="login_empty_email">Please fill in your email</string>
+    <string name="login_empty_pass">Please fill in your password</string>
+    <string name="login_close_forgotten_password_screen">Close forgotten password screen</string>
+    <string name="login_retrieve_password">Retrieve password</string>
+    <string name="login_forgotten_password_description">Enter your email\nand we will send you instructions\nto recover your password.</string>
+    <string name="login_send">Send</string>
+    <string name="login_reset_ok">Password reset successful</string>
+    <string name="login_reset_failed">Password reset failed</string>
+    <string name="login_failed">Login failed</string>
+
+    <!-- Sliding menu options -->
+    <string-array name="sliding_menu_opitions">
+        <item>Home</item>
+        <item>Notification</item>
+        <item>Change community</item>
+        <item>My Profile</item>
+        <item>Logout</item>
+    </string-array>
+
+    <string name="main_content_community_globant">Community Globant</string>
+    <string name="close_notification">Close notification</string>
+    <string name="notification">Notification</string>
+    <string name="go_to">I go to&#8230;</string>
+    <string name="messages">Messages</string>
+    <string name="invalid_email">Invalid email address</string>
+    
 </resources>
