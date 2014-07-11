@@ -2,15 +2,6 @@ package com.globant.next2you;
 
 import java.util.concurrent.Callable;
 
-import com.globant.next2you.async.UICallback;
-import com.globant.next2you.fragments.NotificationDialog;
-import com.globant.next2you.net.ApiServices;
-import com.globant.next2you.objects.CreateUserTokenRequest;
-import com.globant.next2you.objects.CreateUserTokenResponse;
-import com.globant.next2you.objects.PasswordResetRequest;
-import com.globant.next2you.util.UIUtils;
-import com.globant.next2you.util.Util;
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -21,6 +12,15 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
+import com.globant.next2you.async.UICallback;
+import com.globant.next2you.fragments.NotificationDialog;
+import com.globant.next2you.net.ApiServices;
+import com.globant.next2you.objects.CreateUserTokenRequest;
+import com.globant.next2you.objects.CreateUserTokenResponse;
+import com.globant.next2you.objects.PasswordResetRequest;
+import com.globant.next2you.util.UIUtils;
+import com.globant.next2you.util.Util;
 
 public class LoginActivity extends FragmentActivity {
 

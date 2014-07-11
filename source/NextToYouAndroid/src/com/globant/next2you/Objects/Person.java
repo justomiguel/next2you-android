@@ -25,7 +25,6 @@ public class Person implements ClusterItem{
 	private String currentCommunity;
 	private boolean hasCar;
 	private boolean hasActiveTravel;
-	private LatLng latLng;
 	
 	public Person() {
 	}
@@ -231,11 +230,7 @@ public class Person implements ClusterItem{
 
 	@Override
 	public LatLng getPosition() {
-		return latLng;
-	}
-
-	public void setLatLng(LatLng latLng) {
-		this.latLng = latLng;
+		return new LatLng(latitude, longitude);
 	}
 
 }

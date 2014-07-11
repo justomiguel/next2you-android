@@ -9,12 +9,19 @@ public class Destination {
 	private double longitude;
 	private String image;
 	private String color;
+	private int cityId;
+	private String city;
+	private String country;
+	private String icon;
+	private String personIcon;
 
 	public Destination() {
 	}
 
 	public Destination(int destinationId, String name, String address,
-			double latitude, double longitude, String image, String color) {
+			double latitude, double longitude, String image, String color,
+			int cityId, String city, String country, String icon,
+			String personIcon) {
 		super();
 		this.destinationId = destinationId;
 		this.name = name;
@@ -23,6 +30,11 @@ public class Destination {
 		this.longitude = longitude;
 		this.image = image;
 		this.color = color;
+		this.cityId = cityId;
+		this.city = city;
+		this.country = country;
+		this.icon = icon;
+		this.personIcon = personIcon;
 	}
 
 	public int getDestinationId() {
@@ -79,6 +91,46 @@ public class Destination {
 
 	public void setColor(String color) {
 		this.color = color;
+	}
+
+	public int getCityId() {
+		return cityId;
+	}
+
+	public void setCityId(int cityId) {
+		this.cityId = cityId;
+	}
+
+	public String getCity() {
+		return city;
+	}
+
+	public void setCity(String city) {
+		this.city = city;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
+
+	public String getIcon() {
+		return icon;
+	}
+
+	public void setIcon(String icon) {
+		this.icon = icon;
+	}
+
+	public String getPersonIcon() {
+		return personIcon;
+	}
+
+	public void setPersonIcon(String personIcon) {
+		this.personIcon = personIcon;
 	}
 
 }

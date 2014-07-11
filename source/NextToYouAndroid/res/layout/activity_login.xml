@@ -46,6 +46,9 @@
 
             <!-- Login form fields -->
 
+
+            <!-- android:text="jack.next2you@gmail.com" -->
+
             <EditText
                 android:id="@+id/enter_email"
                 android:layout_width="match_parent"
@@ -60,6 +63,8 @@
                 android:textColor="@color/purple"
                 android:textColorHint="@color/light_purple_hint"
                 android:textSize="@dimen/text_size_login_fields" />
+
+            <!-- android:text="Next2you" -->
 
             <EditText
                 android:id="@+id/enter_password"

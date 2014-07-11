@@ -1,8 +1,5 @@
 package com.globant.next2you.fragments;
 
-import com.globant.next2you.R;
-import com.globant.next2you.util.UIUtils;
-
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
@@ -10,6 +7,9 @@ import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.globant.next2you.R;
+import com.globant.next2you.util.UIUtils;
 
 public class NotificationDialog extends Dialog {
 

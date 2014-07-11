@@ -1,11 +1,17 @@
 package com.globant.next2you.net;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 import org.apache.http.entity.StringEntity;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import android.util.Log;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.globant.next2you.objects.CreateCommunityRequest;
 import com.globant.next2you.objects.CreateTravelRequest;
@@ -25,7 +31,14 @@ import com.globant.next2you.objects.UpdateUserTokenRequest;
 
 public class ApiServices {
 	private static final String TAG = "ApiServices";
-	private static final String API_URL = "http://next2you.apiary-mock.com/api/";
+	@SuppressWarnings("unused")
+	private static final String API_URL_MOCK = "http://next2you.apiary-mock.com/api/";
+	/*
+	 * user:jack.next2you@gmail.com
+	 * pass:Next2you
+	 */
+	private static final String API_URL_REAL = "https://next2you.globant.com:8443/api/";
+	private static final String API_URL = API_URL_REAL;
 
 	public static RetrieveApplicationVersionResponse retrieveApplicationVersion()
 			throws IOException {
@@ -46,7 +59,7 @@ public class ApiServices {
 		query.setEntity(new StringEntity(jsonRequest));
 
 		String output = query.send("PUT");
-		
+
 		Log.d(TAG, "createOrUpdateUserToken result=" + output);
 		if (query.getResponseStatusCode() == 201) {
 			return new ObjectMapper().readValue(output,
@@ -79,7 +92,8 @@ public class ApiServices {
 		query.send("PUT");
 
 		int code = query.getResponseStatusCode();
-		Log.d(TAG, "passwordReset resultcode=" + code + ";jsonRequest=" + jsonRequest);
+		Log.d(TAG, "passwordReset resultcode=" + code + ";jsonRequest="
+				+ jsonRequest);
 		return code == 200;
 	}
 
@@ -108,13 +122,29 @@ public class ApiServices {
 		return null;
 	}
 
-	public static Person getPeople(String token) throws IOException {
+	public static List<Person> getPeople(String token, double nELat, double nELon,
+			double sWLat, double swLon, boolean withTravelFlag)
+			throws Exception {
+		Log.d(TAG, String.format(Locale.US,
+				"getPeople nELat=%f nELon=%f sWLat=%f swLon=%f", nELat, nELon,
+				sWLat, swLon));
 		HTTPQuery query = new HTTPQuery(API_URL + "people");
 		query.setAuthorizationToken(token);
+		query.addParam("northEastLatitude", String.valueOf(nELat));
+		query.addParam("northEastLongitude", String.valueOf(nELon));
+		query.addParam("southWestLatitude", String.valueOf(sWLat));
+		query.addParam("southWestLongitude", String.valueOf(swLon));
+		query.addParam("withTravel", String.valueOf(withTravelFlag));
 		String output = query.send("GET");
-
+		
 		if (query.getResponseStatusCode() == 200) {
-			return new ObjectMapper().readValue(output, Person.class);
+			ObjectMapper mapper = new ObjectMapper();
+			JavaType type = mapper.getTypeFactory().constructCollectionType(
+					List.class, Person.class);
+			JSONArray people = new JSONObject(output).getJSONArray("people");
+			//Log.d(TAG, "people:" + people);
+			List<Person> result = mapper.readValue(people.toString(), type);
+			return result;
 		}
 		return null;
 	}
@@ -186,14 +216,16 @@ public class ApiServices {
 		return query.getResponseStatusCode() == 201;
 	}
 
-	/* Currently the returned JSON is not well formated, so it cannot be parsed */
 	public static ListDestinationsResponse listDestinations(String currentToken)
 			throws IOException {
 		HTTPQuery query = new HTTPQuery(API_URL + "destinations");
 		query.setAuthorizationToken(currentToken);
 		String output = query.send("GET");
 		if (query.getResponseStatusCode() == 200) {
-			return new ObjectMapper().readValue(output,
+			ObjectMapper objectMapper = new ObjectMapper();
+			objectMapper.configure(
+					DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			return objectMapper.readValue(output,
 					ListDestinationsResponse.class);
 		}
 		return null;
@@ -225,9 +257,9 @@ public class ApiServices {
 		return null;
 	}
 
-
 	/* Currently the returned JSON is not well formated, so it cannot be parsed */
-	public static RetrievePendingTravelsResponse retrievePendingTravels() throws IOException {
+	public static RetrievePendingTravelsResponse retrievePendingTravels()
+			throws IOException {
 		HTTPQuery query = new HTTPQuery(API_URL + "travelPeople");
 		String output = query.send("GET");
 		if (query.getResponseStatusCode() == 200) {
@@ -260,9 +292,10 @@ public class ApiServices {
 
 	}
 
-	public static boolean registerUser(RegisterUserRequest request) throws IOException {
+	public static boolean registerUser(RegisterUserRequest request)
+			throws IOException {
 		String jsonRequest = new ObjectMapper().writeValueAsString(request);
-		
+
 		HTTPQuery query = new HTTPQuery(API_URL + "userRegistrations");
 		query.setContentType("application/json");
 		query.setEntity(new StringEntity(jsonRequest));

@@ -30,22 +30,27 @@
 
         <activity
             android:name="com.globant.next2you.LoginActivity"
-            android:label="@string/app_name">
+            android:screenOrientation="portrait"
+            android:label="@string/app_name" >
         </activity>
         <activity
             android:name="com.globant.next2you.AppMainContentActivity"
+            android:screenOrientation="portrait"
             android:label="@string/app_name" >
         </activity>
         <activity
             android:name="com.globant.next2you.SplashActivity"
+            android:screenOrientation="portrait"
             android:label="@string/app_name" >
-            
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            
         </activity>
+
+        <service android:name="com.globant.next2you.GPSCollectorService" >
+        </service>
 
         <!-- for Google Maps API v2 -->
         <meta-data

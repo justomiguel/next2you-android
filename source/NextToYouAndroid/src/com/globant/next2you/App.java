@@ -1,9 +1,9 @@
 package com.globant.next2you;
 
+import android.app.Application;
+
 import com.globant.next2you.async.TaskManager;
 import com.globant.next2you.objects.CreateUserTokenResponse;
-
-import android.app.Application;
 
 public class App extends Application {
 	@SuppressWarnings("unused")

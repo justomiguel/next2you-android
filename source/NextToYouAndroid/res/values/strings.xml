@@ -49,5 +49,10 @@
     <string name="go_to">I go to&#8230;</string>
     <string name="messages">Messages</string>
     <string name="invalid_email">Invalid email address</string>
+    <string name="from">from</string>
+    <string name="offer_travel">Offer travel</string>
+    <string name="ask_for_travel">Ask for travel</string>
+    <string name="arrow_up">Arrow up</string>
+    <string name="colon">:</string>
     
 </resources>

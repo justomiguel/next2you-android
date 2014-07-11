@@ -35,6 +35,7 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.PlainSocketFactory;
@@ -51,6 +52,8 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
+
+import android.util.Log;
 
 public class HTTPQuery {
 	@SuppressWarnings("unused")
@@ -94,7 +97,10 @@ public class HTTPQuery {
 		try {
 
 			if (method.equals("GET")) {
-				httpUriRequest = new HttpGet(url);
+				String paramString = URLEncodedUtils.format(qData, "utf-8");
+				String req = url + "?" + paramString;
+				Log.d(TAG, "get request:" + req);
+				httpUriRequest = new HttpGet(req);
 			} else if (method.equals("POST")) {
 				HttpPost post = new HttpPost(url);
 				httpUriRequest = post;

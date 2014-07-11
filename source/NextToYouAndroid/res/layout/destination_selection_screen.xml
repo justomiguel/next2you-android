@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000" >
+
+    <TextView
+        android:id="@+id/screen_title"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/login_screen_header_height"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:background="@color/purple"
+        android:gravity="center"
+        android:text="@string/go_to"
+        android:textColor="@color/white"
+        android:textSize="@dimen/text_size_text" />
+
+    <ImageView
+        android:id="@+id/go_home"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/login_screen_header_height"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="20dp"
+        android:clickable="true"
+        android:contentDescription="@string/logo_login"
+        android:scaleType="center"
+        android:src="@drawable/icon_back" />
+
+    <ListView
+        android:id="@+id/destinations_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:divider="@color/destinations_divider"
+        android:dividerHeight="1dp"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/screen_title" >
+    </ListView>
+
+</RelativeLayout>

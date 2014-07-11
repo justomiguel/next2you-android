@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/login_background"
+    android:paddingBottom="20dp" >
+
+    <include
+        android:id="@+id/header"
+        android:layout_alignParentTop="true"
+        layout="@layout/destination_list_item" />
+
+    <TextView
+        android:id="@+id/lbl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/header"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:padding="20dp"
+        android:text="@string/from"
+        android:textColor="@color/purple"
+        android:textSize="@dimen/text_size_text" />
+
+    <LinearLayout
+        android:id="@+id/up_icons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/lbl"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:paddingBottom="5dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:weightSum="13" >
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:contentDescription="@string/arrow_up"
+            android:scaleType="center"
+            android:src="@drawable/grey_arrow_up" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:contentDescription="@string/arrow_up"
+            android:scaleType="center"
+            android:src="@drawable/grey_arrow_up" />
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:contentDescription="@string/arrow_up"
+            android:scaleType="center"
+            android:src="@drawable/grey_arrow_up" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/wheels"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/up_icons"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:weightSum="13" >
+
+        <com.globant.next2you.kankan.wheel.widget.WheelView
+            android:id="@+id/wheel1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4" />
+
+        <TextView
+            android:id="@+id/dots"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/colon"
+            android:textColor="@color/wheel_view_text"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <com.globant.next2you.kankan.wheel.widget.WheelView
+            android:id="@+id/wheel2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4" />
+
+        <com.globant.next2you.kankan.wheel.widget.WheelView
+            android:id="@+id/wheel3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/down_icons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/wheels"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="5dp"
+        android:weightSum="13" >
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:contentDescription="@string/arrow_up"
+            android:scaleType="center"
+            android:src="@drawable/grey_arrow_down" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:contentDescription="@string/arrow_up"
+            android:scaleType="center"
+            android:src="@drawable/grey_arrow_down" />
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:contentDescription="@string/arrow_up"
+            android:scaleType="center"
+            android:src="@drawable/grey_arrow_down" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/travel_offer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/down_icons"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/login_btn_selector"
+        android:drawableLeft="@drawable/smiley_white"
+        android:gravity="center"
+        android:paddingBottom="5dp"
+        android:paddingLeft="50dp"
+        android:paddingTop="5dp"
+        android:text="@string/offer_travel"
+        android:textColor="@color/white"
+        android:textIsSelectable="false"
+        android:textSize="@dimen/text_size_login_fields" />
+
+    <Button
+        android:id="@+id/travel_ask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/travel_offer"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/login_btn_selector"
+        android:drawableLeft="@drawable/excl_white"
+        android:gravity="center"
+        android:paddingBottom="5dp"
+        android:paddingLeft="50dp"
+        android:paddingTop="5dp"
+        android:text="@string/ask_for_travel"
+        android:textColor="@color/white"
+        android:textIsSelectable="false"
+        android:textSize="@dimen/text_size_login_fields" />
+
+</RelativeLayout>

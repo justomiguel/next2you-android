@@ -1,8 +1,7 @@
 package com.globant.next2you;
 
-import java.util.ResourceBundle;
-
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,11 +12,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -32,19 +31,23 @@ public class AppMainContentActivity extends FragmentActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-
+		
+		initAndOpenMapScreen();
+	}
+	
+	public void initAndOpenMapScreen() {
 		setContentView(R.layout.app_main_content_screen);
 		initSlidingMenu();
 
 		setupMenuToggle();
-		
+
 		TextView subtitle = (TextView) findViewById(R.id.subtitle);
 		UIUtils.prepareTextView(this, subtitle);
-		
+
 		openSection(0);
 	}
-	
-	private void openSection(int idx) {
+
+	public void openSection(int idx) {
 		Fragment fragment = null;
 		switch (idx) {
 		case 0:
@@ -53,10 +56,12 @@ public class AppMainContentActivity extends FragmentActivity {
 		default:
 			break;
 		}
-		
-		if(fragment != null) {
-			FragmentTransaction tr = getSupportFragmentManager().beginTransaction();
-			tr.replace(R.id.container, fragment, fragment.getClass().getSimpleName());
+
+		if (fragment != null) {
+			FragmentTransaction tr = getSupportFragmentManager()
+					.beginTransaction();
+			tr.replace(R.id.container, fragment, fragment.getClass()
+					.getSimpleName());
 			tr.commit();
 		}
 	}
@@ -67,8 +72,16 @@ public class AppMainContentActivity extends FragmentActivity {
 					@Override
 					public void onClick(View v) {
 						slidingMenu.toggle(true);
+						toggleShadowOverlay();
 					}
 				});
+	}
+	
+	private void toggleShadowOverlay() {
+		View shadow = findViewById(R.id.shadow_overlay);
+		int visibility = shadow.getVisibility();
+		visibility = visibility == View.VISIBLE ? View.GONE : View.VISIBLE;
+		shadow.setVisibility(visibility);
 	}
 
 	private void initSlidingMenu() {
@@ -78,20 +91,40 @@ public class AppMainContentActivity extends FragmentActivity {
 		slidingMenu.setShadowWidthRes(R.dimen.slidingmenuWidth);
 		slidingMenu.setBehindOffsetRes(R.dimen.slidingmenuOffset);
 		slidingMenu.setFadeDegree(0.35f);
+		slidingMenu.setSlidingEnabled(false);
 		slidingMenu.attachToActivity(this, SlidingMenu.SLIDING_CONTENT);
 		ListView leftMenu = (ListView) LayoutInflater.from(this).inflate(
 				R.layout.sliding_menu_options, null);
 		leftMenu.setAdapter(new LeftMenuOptionsAdapter(this));
+		leftMenu.setOnItemClickListener(new OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1, int pos,
+					long arg3) {
+				if(pos == 0) {
+					openSection(0);
+					slidingMenu.toggle(true);
+					toggleShadowOverlay();
+				} else if (pos == 4) {
+					// logout
+					App.app().setAuth(null);
+					Intent i = new Intent(AppMainContentActivity.this,
+							LoginActivity.class);
+					startActivity(i);
+					finish();
+				}
+			}
+		});
 		slidingMenu.setMenu(leftMenu);
 	}
 
 	private class LeftMenuOptionsAdapter extends BaseAdapter {
 		private String[] options;
-		
+
 		public LeftMenuOptionsAdapter(Context ctx) {
-			options = ctx.getResources().getStringArray(R.array.sliding_menu_opitions);
+			options = ctx.getResources().getStringArray(
+					R.array.sliding_menu_opitions);
 		}
-		
+
 		@Override
 		public int getCount() {
 			return options.length;

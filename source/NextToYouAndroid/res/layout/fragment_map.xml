@@ -14,11 +14,10 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="120dp"
         android:layout_alignParentBottom="true"
         android:background="@drawable/map_background"
         android:orientation="horizontal"
-        android:padding="40dp"
         android:weightSum="5" >
 
         <View

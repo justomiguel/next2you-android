@@ -20,7 +20,7 @@
         android:layout_height="@dimen/login_screen_header_height"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginLeft="20dp"
+        android:paddingLeft="20dp"
         android:clickable="true"
         android:contentDescription="@string/logo_login"
         android:scaleType="center"
@@ -31,18 +31,18 @@
         android:layout_width="wrap_content"
         android:layout_height="@dimen/login_screen_header_height"
         android:layout_alignParentRight="true"
-        android:scaleType="center"
-        android:contentDescription="@string/messages"
         android:layout_marginRight="20dp"
+        android:contentDescription="@string/messages"
+        android:scaleType="center"
         android:src="@drawable/message" />
-    
+
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="@dimen/login_screen_header_height"
-        android:layout_toLeftOf="@id/message_icon"
-        android:scaleType="center"
-        android:contentDescription="@string/messages"
         android:layout_marginRight="20dp"
+        android:layout_toLeftOf="@id/message_icon"
+        android:contentDescription="@string/messages"
+        android:scaleType="center"
         android:src="@drawable/mail_icon" />
 
     <TextView
@@ -69,5 +69,17 @@
         android:layout_below="@id/subtitle"
         android:orientation="vertical" >
     </LinearLayout>
+
+    <View
+        android:id="@+id/shadow_overlay"
+        android:visibility="gone"
+        android:clickable="false"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/sliding_menu_toggle"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:background="#77000000" />
 
 </RelativeLayout>
