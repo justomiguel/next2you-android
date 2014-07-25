@@ -1,12 +1,21 @@
 package com.globant.next2you.fragments;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 
+import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.DataSetObserver;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +30,7 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.globant.next2you.App;
 import com.globant.next2you.AppMainContentActivity;
@@ -34,13 +44,16 @@ import com.globant.next2you.objects.Destination;
 import com.globant.next2you.objects.ListDestinationsResponse;
 import com.globant.next2you.util.UIUtils;
 
+@SuppressLint("InflateParams")
 public class DestinationSelectionFragment extends BaseFragment {
+	private DestinationsAdapter adapter;
+	@SuppressLint("InflateParams")
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		super.onCreateView(inflater, container, savedInstanceState);
-		View rootView = inflater.inflate(R.layout.destination_selection_screen,
-				null);
+		final View rootView = inflater.inflate(
+				R.layout.destination_selection_screen, null);
 
 		UIUtils.prepareTextView(getActivity(),
 				(TextView) rootView.findViewById(R.id.screen_title));
@@ -56,32 +69,34 @@ public class DestinationSelectionFragment extends BaseFragment {
 
 		final ListView destinationsList = (ListView) rootView
 				.findViewById(R.id.destinations_list);
-		
+
 		App.getTaskManager().assignNet(new Callable<Object>() {
-			
+
 			@Override
 			public Object call() throws Exception {
 				String currentToken = App.app().getAuth().getToken();
-				return ApiServices.listDestinations(currentToken );
+				return ApiServices.listDestinations(currentToken);
 			}
 		}, new UICallback() {
-			
+
 			@Override
 			public void onResult(Object result) {
 				ListDestinationsResponse dest = (ListDestinationsResponse) result;
-				final DestinationsAdapter adapter = new DestinationsAdapter(dest.getDestinations());
-				destinationsList.setOnItemClickListener(new OnItemClickListener() {
-					@Override
-					public void onItemClick(AdapterView<?> arg0, View arg1, int pos,
-							long arg3) {
-						if (pos == adapter.selectedPos) {
-							adapter.selectedPos = -1;
-						} else {
-							adapter.selectedPos = pos;
-						}
-						adapter.notifyDataSetChanged();
-					}
-				});
+				adapter = new DestinationsAdapter(
+						dest.getDestinations(), rootView);
+				destinationsList
+						.setOnItemClickListener(new OnItemClickListener() {
+							@Override
+							public void onItemClick(AdapterView<?> arg0,
+									View arg1, int pos, long arg3) {
+								if (pos == adapter.selectedPos) {
+									adapter.selectedPos = -1;
+								} else {
+									adapter.selectedPos = pos;
+								}
+								adapter.notifyDataSetChanged();
+							}
+						});
 				destinationsList.setAdapter(adapter);
 			}
 		});
@@ -95,6 +110,7 @@ public class DestinationSelectionFragment extends BaseFragment {
 	}
 
 	private static class DestinationsAdapter extends BaseAdapter {
+
 		private final class DestinationWheelAdapter implements WheelViewAdapter {
 			private final WheelView wh;
 			private String[] items;
@@ -153,15 +169,21 @@ public class DestinationSelectionFragment extends BaseFragment {
 			public View getEmptyItem(View convertView, ViewGroup parent) {
 				return null;
 			}
+
 		}
+
 
 		@SuppressWarnings("unused")
 		private static final String TAG = "DestinationsAdapter";
 		private ArrayList<Destination> destinations;
 		private int selectedPos = -1;
+		private View holder;
+		private AskRideScreen askRide;
 
-		public DestinationsAdapter(ArrayList<Destination> destinations) {
+		public DestinationsAdapter(ArrayList<Destination> destinations,
+				View rootView) {
 			this.destinations = destinations;
+			this.holder = rootView;
 		}
 
 		@Override
@@ -229,14 +251,149 @@ public class DestinationSelectionFragment extends BaseFragment {
 
 			TextView dots = (TextView) rootView.findViewById(R.id.dots);
 			UIUtils.prepareTextView(ctx, dots);
-			
+
 			Button offerBtn = (Button) rootView.findViewById(R.id.travel_offer);
 			UIUtils.prepareTextView(ctx, offerBtn);
+			offerBtn.setOnClickListener(getOfferButtonOnClickListener(ctx));
 
 			Button askBtn = (Button) rootView.findViewById(R.id.travel_ask);
 			UIUtils.prepareTextView(ctx, askBtn);
+			askBtn.setOnClickListener(getAskButtonOnClickListener(ctx));
 
 			return rootView;
+		}
+
+		private OnClickListener getAskButtonOnClickListener(final Context ctx) {
+			return new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					setAskRide(new AskRideScreen(ctx));
+					getAskRide().initialize(holder);
+				}
+			};
+		}
+
+		private OnClickListener getOfferButtonOnClickListener(final Context ctx) {
+			return new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					LayoutInflater inflater = LayoutInflater.from(ctx);
+					final LinearLayout dialogHolder = (LinearLayout) holder
+							.findViewById(R.id.dialog_holder);
+					dialogHolder.removeAllViews();
+					final View offerDialogView = inflater.inflate(
+							R.layout.offer_ride_dialog, dialogHolder);
+
+					// setup views
+					TextView personsCountField = (TextView) offerDialogView
+							.findViewById(R.id.notification_text_2);
+					personsCountField.setText(String.format(
+							Locale.US,
+							ctx.getResources().getString(
+									R.string.offer_ride_persons), 20));
+					UIUtils.prepareTextView(ctx, personsCountField);
+
+					TextView titleLine1 = (TextView) offerDialogView
+							.findViewById(R.id.notification_text);
+					TextView titleLine3 = (TextView) offerDialogView
+							.findViewById(R.id.notification_text_3);
+					UIUtils.prepareTextView(ctx, titleLine1);
+					UIUtils.prepareTextView(ctx, titleLine3);
+
+					//dialogHolder.addView(offerDialogView);
+					dialogHolder.setVisibility(View.VISIBLE);
+
+					TextView ribbonText = (TextView) offerDialogView
+							.findViewById(R.id.ribbon_text);
+					UIUtils.prepareTextView(ctx, ribbonText);
+					String format = ctx
+							.getString(R.string.offer_ride_travels_completed);
+					String formatted = String.format(Locale.US, format, 15);
+					ribbonText.setText(Html.fromHtml(formatted));
+
+					TextView congratsTxt = (TextView) offerDialogView
+							.findViewById(R.id.contgrats_improve);
+					UIUtils.prepareTextView(ctx, congratsTxt);
+
+					offerDialogView.findViewById(R.id.close_notification)
+							.setOnClickListener(new OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									dialogHolder.removeView(offerDialogView);
+									dialogHolder.setVisibility(View.GONE);
+								}
+							});
+
+					offerDialogView.findViewById(R.id.share_fb_btn)
+							.setOnClickListener(new OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									shareToFbWall(ctx);
+								}
+							});
+
+					offerDialogView.findViewById(R.id.share_twitter_btn)
+							.setOnClickListener(new OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									postTweet(ctx);
+								}
+							});
+				}
+			};
+		}
+
+		private void postTweet(Context ctx) {
+			Intent tweetIntent = new Intent(Intent.ACTION_SEND);
+			tweetIntent.putExtra(Intent.EXTRA_TEXT, "Test tweet");
+			tweetIntent.setType("text/plain");
+			PackageManager pm = ctx.getPackageManager();
+			List<ResolveInfo> lract = pm.queryIntentActivities(tweetIntent,
+					PackageManager.MATCH_DEFAULT_ONLY);
+
+			boolean resolved = false;
+
+			for (ResolveInfo ri : lract) {
+				// Log.d(TAG, "name:" + ri.activityInfo.name);
+				if (ri.activityInfo.name.toLowerCase(Locale.US).contains(
+						"twitter")) {
+					tweetIntent.setClassName(ri.activityInfo.packageName,
+							ri.activityInfo.name);
+					resolved = true;
+					break;
+				}
+			}
+
+			ctx.startActivity(resolved ? tweetIntent : Intent.createChooser(
+					tweetIntent, "Choose one"));
+		}
+
+		private void shareToFbWall(Context ctx) {
+			// http://stackoverflow.com/questions/7545254/android-and-facebook-share-intent
+			Intent shareIntent = new Intent(android.content.Intent.ACTION_SEND);
+			shareIntent.setType("text/plain");
+			shareIntent.putExtra(android.content.Intent.EXTRA_TEXT,
+					"http://www.test.com");
+			PackageManager pm = ctx.getPackageManager();
+			List<ResolveInfo> activityList = pm.queryIntentActivities(
+					shareIntent, 0);
+			for (final ResolveInfo app : activityList) {
+				if ((app.activityInfo.name).contains("facebook")) {
+					final ActivityInfo activity = app.activityInfo;
+					final ComponentName name = new ComponentName(
+							activity.applicationInfo.packageName, activity.name);
+					shareIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+					shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+							| Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+					shareIntent.setComponent(name);
+					ctx.startActivity(shareIntent);
+					return;
+				}
+			}
+
+			Toast.makeText(ctx, R.string.facebook_app_not_available,
+					Toast.LENGTH_SHORT).show();
 		}
 
 		private void initWheelView(final WheelView wh, String[] items) {
@@ -282,6 +439,14 @@ public class DestinationSelectionFragment extends BaseFragment {
 			img.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
 
 			return view;
+		}
+
+		public AskRideScreen getAskRide() {
+			return askRide;
+		}
+
+		public void setAskRide(AskRideScreen askRide) {
+			this.askRide = askRide;
 		}
 
 	}

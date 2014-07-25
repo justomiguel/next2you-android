@@ -1,0 +1,60 @@
+{
+    "travels": [
+        {
+            "travelId": 100,
+            "travelPersonId": 3819,
+            "personToBeApproved": "Person1",
+            "personIdToBeApproved": 3820,
+            "startTime": "2014-06-09T15: 12: 06",
+            "endTime": ""
+        },
+        {
+            "travelId": 100,
+            "travelPersonId": 3820,
+            "personToBeApproved": "Person2",
+            "personIdToBeApproved": 3819,
+            "startTime": "2014-06-09T15: 12: 06",
+            "endTime": ""
+        },
+        {
+            "travelId": 100,
+            "travelPersonId": 3819,
+            "personToBeApproved": "Person0",
+            "personIdToBeApproved": 3818,
+            "startTime": "2014-06-09T15: 12: 06",
+            "endTime": ""
+        },
+        {
+            "travelId": 100,
+            "travelPersonId": 3819,
+            "personToBeApproved": "Person4",
+            "personIdToBeApproved": 3821,
+            "startTime": "2014-06-09T15: 12: 06",
+            "endTime": ""
+        },
+        {
+            "travelId": 100,
+            "travelPersonId": 3819,
+            "personToBeApproved": "Person5",
+            "personIdToBeApproved": 3784,
+            "startTime": "2014-06-09T15: 12: 06",
+            "endTime": ""
+        },
+        {
+            "travelId": 100,
+            "travelPersonId": 3819,
+            "personToBeApproved": "Person6",
+            "personIdToBeApproved": 3785,
+            "startTime": "2014-06-09T15: 12: 06",
+            "endTime": ""
+        },
+        {
+            "travelId": 100,
+            "travelPersonId": 3819,
+            "personToBeApproved": "Person7",
+            "personIdToBeApproved": 3787,
+            "startTime": "2014-06-09T15: 12: 06",
+            "endTime": ""
+        }
+    ]
+}

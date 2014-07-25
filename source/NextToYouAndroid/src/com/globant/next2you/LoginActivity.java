@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -190,6 +191,7 @@ public class LoginActivity extends FragmentActivity {
 				loginBtn.setEnabled(true);
 				CreateUserTokenResponse resp = (CreateUserTokenResponse) result;
 				if (resp != null) {
+					Log.d("AUTH", resp.getToken());
 					App.app().setAuth(resp);
 					Intent i = new Intent(LoginActivity.this,
 							AppMainContentActivity.class);

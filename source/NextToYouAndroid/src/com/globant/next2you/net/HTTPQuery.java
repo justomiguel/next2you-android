@@ -37,6 +37,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
@@ -98,7 +99,7 @@ public class HTTPQuery {
 
 			if (method.equals("GET")) {
 				String paramString = URLEncodedUtils.format(qData, "utf-8");
-				String req = url + "?" + paramString;
+				String req = url + ((paramString != null && paramString.length() > 0) ? ("?" + paramString) : "");
 				Log.d(TAG, "get request:" + req);
 				httpUriRequest = new HttpGet(req);
 			} else if (method.equals("POST")) {
@@ -119,8 +120,10 @@ public class HTTPQuery {
 			if (getContentType() != null && getContentType().length() > 0) {
 				httpUriRequest.setHeader("Content-Type", getContentType());
 			}
+			httpUriRequest.setHeader("Connection","Keep-Alive");
+			
 			if (basicAuth != null && basicAuth.length() > 0) {
-				// Log.d(TAG, "use basic auth:" + basicAuth);
+				//Log.d(TAG, "use basic auth:" + basicAuth);
 				httpUriRequest.setHeader("Authorization", basicAuth);
 			}
 			response = httpclient.execute(httpUriRequest);
@@ -201,6 +204,7 @@ public class HTTPQuery {
 			HttpParams params = new BasicHttpParams();
 			HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
 			HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
+			ConnManagerParams.setMaxTotalConnections(params, 1);
 
 			SchemeRegistry registry = new SchemeRegistry();
 			registry.register(new Scheme("http", PlainSocketFactory
@@ -209,7 +213,6 @@ public class HTTPQuery {
 
 			ClientConnectionManager ccm = new ThreadSafeClientConnManager(
 					params, registry);
-
 			return new DefaultHttpClient(ccm, params);
 		} catch (Exception e) {
 			return new DefaultHttpClient();

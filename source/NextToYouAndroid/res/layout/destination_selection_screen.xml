@@ -33,10 +33,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
-        android:divider="@color/destinations_divider"
-        android:dividerHeight="1dp"
         android:layout_alignParentRight="true"
-        android:layout_below="@id/screen_title" >
+        android:layout_below="@id/screen_title"
+        android:divider="@color/destinations_divider"
+        android:dividerHeight="1dp" >
     </ListView>
+
+    <LinearLayout
+        android:id="@+id/dialog_holder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/screen_title"
+        android:visibility="gone"
+        android:background="#88000000"
+        android:orientation="vertical" />
 
 </RelativeLayout>

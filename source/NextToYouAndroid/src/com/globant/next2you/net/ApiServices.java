@@ -38,7 +38,7 @@ public class ApiServices {
 	 * pass:Next2you
 	 */
 	private static final String API_URL_REAL = "https://next2you.globant.com:8443/api/";
-	private static final String API_URL = API_URL_REAL;
+	public static final String API_URL = API_URL_REAL;
 
 	public static RetrieveApplicationVersionResponse retrieveApplicationVersion()
 			throws IOException {
@@ -122,6 +122,19 @@ public class ApiServices {
 		return null;
 	}
 
+	public static Person getPersonInfo(String token, long travelPersonId) throws Exception {
+		HTTPQuery query = new HTTPQuery(API_URL + "people/" + travelPersonId);
+		query.setAuthorizationToken(token);
+		query.setContentType("text/plain");
+		
+		String output = query.send("GET");
+		if (query.getResponseStatusCode() == 200) {
+			return new ObjectMapper().readValue(output,
+					Person.class);
+		}
+		return null;
+	}
+	
 	public static List<Person> getPeople(String token, double nELat, double nELon,
 			double sWLat, double swLon, boolean withTravelFlag)
 			throws Exception {
@@ -258,10 +271,12 @@ public class ApiServices {
 	}
 
 	/* Currently the returned JSON is not well formated, so it cannot be parsed */
-	public static RetrievePendingTravelsResponse retrievePendingTravels()
+	public static RetrievePendingTravelsResponse retrievePendingTravels(String currentToken)
 			throws IOException {
 		HTTPQuery query = new HTTPQuery(API_URL + "travelPeople");
+		query.setAuthorizationToken(currentToken);
 		String output = query.send("GET");
+		
 		if (query.getResponseStatusCode() == 200) {
 			return new ObjectMapper().readValue(output,
 					RetrievePendingTravelsResponse.class);

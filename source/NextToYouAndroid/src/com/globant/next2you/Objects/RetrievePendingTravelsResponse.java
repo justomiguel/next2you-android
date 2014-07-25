@@ -3,9 +3,12 @@ package com.globant.next2you.objects;
 import java.util.ArrayList;
 
 public class RetrievePendingTravelsResponse {
+	private ArrayList<Travel> travels;
 
-	ArrayList<Travel> travels;
-
+	public RetrievePendingTravelsResponse() {
+		super();
+    }
+	
 	public RetrievePendingTravelsResponse(ArrayList<Travel> travels) {
 		super();
 		this.travels = travels;

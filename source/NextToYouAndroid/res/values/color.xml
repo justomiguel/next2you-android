@@ -11,7 +11,7 @@
     <color name="destinations_divider">#f34870</color>
     <color name="light_purple_hint">#9e7eb3</color>
 	<color name="notification_dialog_background">#edebe7</color>
-	
+		
 	<!-- clusters -->
 	<color name="red_marker">#eb5353</color>
 	<color name="green_marker">#3ac447</color>
@@ -19,4 +19,12 @@
 	
 	<!-- destination selection -->
 	<color name="wheel_view_text">#a5a4a1</color>
+	
+	<!-- offer ride dialog -->
+	<color name="offer_ride_green">#46d055</color>
+
+	<!-- ask ride -->
+	<color name="ask_ride_grey">#9c9c9c</color>
+	<color name="ask_ride_time_color">#c4c5c6</color>
+	<color name="ask_ride_user_descr_color">#808285</color>
 </resources>

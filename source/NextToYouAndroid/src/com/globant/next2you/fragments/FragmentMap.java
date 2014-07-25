@@ -549,6 +549,7 @@ public class FragmentMap extends BaseFragment implements
 				if(result == null || !isAdded()) {
 					return;
 				}
+				@SuppressWarnings("unchecked")
 				List<Person> list = (List<Person>) result;
 				list.add(new Me(new LatLng(lat, lon)));
 				//log("result:" + list);

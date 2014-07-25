@@ -55,4 +55,19 @@
     <string name="arrow_up">Arrow up</string>
     <string name="colon">:</string>
     
+    <!-- Offer a ride -->
+    <string name="offer_ride_description">You offered to share travel:</string>
+    <string name="offer_ride_persons">%d persons</string>
+    <string name="offer_ride_go_to_your_direction">which are going to your direction</string>
+    <string name="offer_ride_travels_completed">
+        <![CDATA[
+        	<big>%d</big> travels shared 
+        ]]>
+    </string>
+    <string name="offer_ride_congrats">Congratulations\nyou have won an award\nfor helping improve</string>
+    <string name="facebook_app_not_available">Facebook application not found</string>
+    <string name="ask_ride_pending_travels">Offered travels</string>
+    <string name="ask_ride_offered_travels">Offered travels</string>
+    <string name="ask_ride_ignore">Ignore</string>
+    <string name="offer_ride">Offer ride</string>
 </resources>

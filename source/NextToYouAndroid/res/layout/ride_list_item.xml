@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="20dp"
+    android:paddingBottom="10dp" >
+
+    <!-- avatar widget -->
+
+    <ImageView
+        android:id="@+id/avatar"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="15dp"
+        android:scaleType="centerCrop" />
+
+    <com.globant.next2you.view.TransparentListOverlay
+        android:id="@+id/avatar_overlay"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="15dp"
+        android:background="@color/transparent" >
+    </com.globant.next2you.view.TransparentListOverlay>
+
+    <!-- info labels -->
+
+    <TextView
+        android:id="@+id/time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="20dp"
+        android:textColor="@color/ask_ride_time_color"
+        android:textSize="@dimen/text_size_info" />
+
+    <TextView
+        android:id="@+id/user_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@id/time"
+        android:layout_toRightOf="@id/avatar"
+        android:layout_marginTop="20dp"
+        android:textColor="@color/black_marker"
+        android:textSize="@dimen/text_size_title" />
+
+    <TextView
+        android:id="@+id/user_descr"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/user_name"
+        android:layout_toLeftOf="@id/time"
+        android:layout_toRightOf="@id/avatar"
+        android:textColor="@color/ask_ride_user_descr_color"
+        android:textSize="@dimen/text_size_title" />
+
+    <TextView
+        android:id="@+id/span_time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/user_descr"
+        android:layout_toLeftOf="@id/time"
+        android:layout_toRightOf="@id/avatar"
+        android:textColor="@color/black_marker"
+        android:textSize="@dimen/text_size_title" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/span_time"
+        android:layout_marginBottom="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_toRightOf="@id/avatar"
+        android:orientation="horizontal"
+        android:weightSum="2" >
+
+        <Button
+            android:id="@+id/ignore_request"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="20dp"
+            android:layout_weight="1"
+            android:background="@drawable/ride_button_background"
+            android:text="@string/ask_ride_ignore"
+            android:textColor="@color/ask_ride_grey" />
+
+        <Button
+            android:id="@+id/offer_ride"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="20dp"
+            android:layout_weight="1"
+            android:background="@drawable/ride_button_background_active"
+            android:text="@string/offer_ride"
+            android:textColor="@color/offer_ride_green" />
+    </LinearLayout>
+
+</RelativeLayout>

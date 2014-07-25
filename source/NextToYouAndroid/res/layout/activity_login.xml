@@ -48,7 +48,8 @@
 
 
             <!-- android:text="jack.next2you@gmail.com" -->
-
+			<!-- clark.next2you@gmail.com -->
+			<!-- sheldon.next2you@gmail.com -->
             <EditText
                 android:id="@+id/enter_email"
                 android:layout_width="match_parent"

@@ -5,6 +5,7 @@ public class Travel {
 	private long travelId;
 	private long travelPersonId;
 	private String personToBeApproved;
+	private long personIdToBeApproved;
 	private String startTime;
 	private String endTime;
 
@@ -12,11 +13,13 @@ public class Travel {
 	}
 
 	public Travel(long travelId, long travelPersonId,
-			String personToBeApproved, String startTime, String endTime) {
+			String personToBeApproved, long personIdToBeApproved,
+			String startTime, String endTime) {
 		super();
 		this.travelId = travelId;
 		this.travelPersonId = travelPersonId;
 		this.personToBeApproved = personToBeApproved;
+		this.personIdToBeApproved = personIdToBeApproved;
 		this.startTime = startTime;
 		this.endTime = endTime;
 	}
@@ -59,6 +62,14 @@ public class Travel {
 
 	public void setEndTime(String endTime) {
 		this.endTime = endTime;
+	}
+
+	public long getPersonIdToBeApproved() {
+		return personIdToBeApproved;
+	}
+
+	public void setPersonIdToBeApproved(long personIdToBeApproved) {
+		this.personIdToBeApproved = personIdToBeApproved;
 	}
 
 }

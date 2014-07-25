@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    android:background="@color/notification_dialog_background" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <ImageView
+            android:id="@+id/close_notification"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:clickable="true"
+            android:contentDescription="@string/close_notification"
+            android:paddingRight="20dp"
+            android:paddingTop="15dp"
+            android:scaleType="center"
+            android:src="@drawable/close_notification" />
+
+        <TextView
+            android:id="@+id/notification_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/close_notification"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="15dp"
+            android:gravity="center"
+            android:text="@string/offer_ride_description"
+            android:textColor="@color/purple"
+            android:textSize="@dimen/text_size_text" />
+
+        <TextView
+            android:id="@+id/notification_text_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/notification_text"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:gravity="center"
+            android:textColor="@color/offer_ride_green"
+            android:textSize="@dimen/text_size_title" />
+
+        <TextView
+            android:id="@+id/notification_text_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/notification_text_2"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="5dp"
+            android:gravity="center"
+            android:text="@string/offer_ride_go_to_your_direction"
+            android:textColor="@color/purple"
+            android:textSize="@dimen/text_size_text" />
+
+        <!-- ribbons -->
+
+        <ImageView
+            android:id="@+id/ribbon_green"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/notification_text_3"
+            android:layout_centerHorizontal="true"
+            android:scaleType="center"
+            android:src="@drawable/ribbon_green" />
+
+        <TextView
+            android:id="@+id/ribbon_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/ribbon_green"
+            android:gravity="center"
+            android:paddingBottom="5dp"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_size_text" />
+
+        <ImageView
+            android:id="@+id/cup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/ribbon_green"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:scaleType="center"
+            android:src="@drawable/cup" />
+
+        <TextView
+            android:id="@+id/contgrats_improve"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/cup"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:text="@string/offer_ride_congrats"
+            android:textColor="@color/purple"
+            android:textSize="@dimen/text_size_title" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/contgrats_improve"
+            android:layout_margin="30dp"
+            android:paddingBottom="20dp"
+            android:orientation="horizontal"
+            android:weightSum="2" >
+
+            <ImageView
+                android:id="@+id/share_fb_btn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:src="@drawable/fb_share" />
+
+            <ImageView
+                android:id="@+id/share_twitter_btn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:src="@drawable/twitter_share" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</ScrollView>

@@ -37,6 +37,7 @@
         android:src="@drawable/message" />
 
     <ImageView
+        android:id="@+id/send_email"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/login_screen_header_height"
         android:layout_marginRight="20dp"

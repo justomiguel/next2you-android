@@ -40,6 +40,18 @@ public class AppMainContentActivity extends FragmentActivity {
 		initSlidingMenu();
 
 		setupMenuToggle();
+		
+		findViewById(R.id.send_email).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(Intent.ACTION_SEND);
+				intent.setType("text/plain");
+				intent.putExtra(Intent.EXTRA_EMAIL, "emailaddress@emailaddress.com");
+				intent.putExtra(Intent.EXTRA_SUBJECT, "Subject");
+				intent.putExtra(Intent.EXTRA_TEXT, "Email body.");
+				startActivity(Intent.createChooser(intent, "Send Email"));
+			}
+		});
 
 		TextView subtitle = (TextView) findViewById(R.id.subtitle);
 		UIUtils.prepareTextView(this, subtitle);
