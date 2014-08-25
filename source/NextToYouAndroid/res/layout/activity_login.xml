@@ -61,6 +61,7 @@
                 android:hint="@string/login_e_mail"
                 android:inputType="textEmailAddress"
                 android:maxLines="1"
+                android:text="clark.next2you@gmail.com"
                 android:textColor="@color/purple"
                 android:textColorHint="@color/light_purple_hint"
                 android:textSize="@dimen/text_size_login_fields" />
@@ -74,6 +75,7 @@
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_marginTop="40dp"
+                android:text="Next2you"
                 android:background="@drawable/edit_text_background"
                 android:hint="@string/login_password"
                 android:inputType="textPassword"

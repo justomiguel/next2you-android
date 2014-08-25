@@ -1,10 +1,13 @@
 package com.globant.next2you.objects;
 
+import java.util.ArrayList;
+
 public class CreateUserTokenResponse {
 
 	private boolean authenticate;
 	private String token;
-
+	private ArrayList<Community> communities;
+	
 	public CreateUserTokenResponse() {
 	}
 
@@ -28,6 +31,14 @@ public class CreateUserTokenResponse {
 
 	public void setToken(String token) {
 		this.token = token;
+	}
+
+	public ArrayList<Community> getCommunities() {
+		return communities;
+	}
+
+	public void setCommunities(ArrayList<Community> communities) {
+		this.communities = communities;
 	}
 
 }

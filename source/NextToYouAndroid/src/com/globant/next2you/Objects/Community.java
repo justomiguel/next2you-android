@@ -1,8 +1,7 @@
 package com.globant.next2you.objects;
 
 public class Community {
-
-	private int id;
+	private int communityId;
 	private String name;
 
 	public Community() {
@@ -10,17 +9,10 @@ public class Community {
 
 	public Community(int id, String name) {
 		super();
-		this.id = id;
+		this.setCommunityId(id);
 		this.name = name;
 	}
 
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
 
 	public String getName() {
 		return name;
@@ -28,6 +20,14 @@ public class Community {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public int getCommunityId() {
+		return communityId;
+	}
+
+	public void setCommunityId(int communityId) {
+		this.communityId = communityId;
 	}
 
 }

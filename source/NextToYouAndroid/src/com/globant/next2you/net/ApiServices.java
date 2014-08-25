@@ -51,6 +51,20 @@ public class ApiServices {
 		return null;
 	}
 
+	public static String selectCommunity(String token, int communityId) throws Exception {
+		HTTPQuery query = new HTTPQuery(API_URL + "userTokens?set=true");
+		query.setContentType("application/json");
+		JSONObject json = new JSONObject();
+		json.put("token", token);
+		json.put("communityId", communityId);
+		String jsonRequest = json.toString();
+		query.setEntity(new StringEntity(jsonRequest ));
+		query.setAuthorizationToken(token);
+		
+		String output = query.send("POST");
+		return output;
+	}
+	
 	public static CreateUserTokenResponse createOrUpdateUserToken(
 			CreateUserTokenRequest request) throws IOException {
 		String jsonRequest = new ObjectMapper().writeValueAsString(request);
@@ -161,6 +175,19 @@ public class ApiServices {
 		}
 		return null;
 	}
+	
+	public static Person getPerson(String token) throws Exception {
+		HTTPQuery query = new HTTPQuery(API_URL + "people");
+		query.setAuthorizationToken(token);
+		String output = query.send("GET");
+		if (query.getResponseStatusCode() == 200) {
+			ObjectMapper mapper = new ObjectMapper();
+			Person result = mapper.readValue(new JSONObject(output).toString(),
+					Person.class);
+			return result;
+		}
+		return null;
+	}
 
 	public static boolean updateLoggedPerson(String token) throws IOException {
 		HTTPQuery query = new HTTPQuery(API_URL + "people");
@@ -168,6 +195,21 @@ public class ApiServices {
 		query.send("POST");
 
 		return query.getResponseStatusCode() == 200;
+	}
+	
+	public static String updatePerson(String token, Person p)
+			throws IOException {
+		HTTPQuery query = new HTTPQuery(API_URL + "people");
+		query.setAuthorizationToken(token);
+		query.addParam("personId", String.valueOf(p.getPersonId()));
+		query.addParam("email", p.getEmail());
+		query.addParam("nickname", p.getNickname());
+		query.addParam("comments", p.getComments());
+		query.addParam("address", p.getAddress());
+		query.addParam("destinationId", String.valueOf(p.getDestinationId()));
+		query.addParam("isAddressVisible", p.getIsAddressVisible() ? "true"
+				: "false");
+		return query.send("POST");
 	}
 
 	/* Currently the returned JSON is not well formated, so it cannot be parsed */
@@ -254,6 +296,27 @@ public class ApiServices {
 		return null;
 	}
 
+	public static void resetPass(String oldPass, String newPass, String token)
+			throws IOException {
+		try {
+			JSONObject request = new JSONObject();
+			request.put("oldPassword", oldPass);
+			request.put("newPassword", newPass);
+
+			String jsonRequest = new ObjectMapper().writeValueAsString(request);
+
+			HTTPQuery query = new HTTPQuery(API_URL + "passwordReset");
+			query.setAuthorizationToken(token);
+			query.setContentType("application/json");
+			query.setEntity(new StringEntity(jsonRequest));
+			String output = query.send("POST");
+			Log.d(TAG, "output=" + output);
+			return;
+		} catch (Exception e) {
+			Log.e(TAG, "", e);
+		}
+	}
+	
 	public static CreateTravelResponse createTravel(String currentToken,
 			CreateTravelRequest request) throws IOException {
 		String jsonRequest = new ObjectMapper().writeValueAsString(request);

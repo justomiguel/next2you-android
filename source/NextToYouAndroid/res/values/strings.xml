@@ -11,6 +11,7 @@
         <item>map fragment</item>
     </string-array>
 
+    <string name="fill_in_pass">Please fill in your password</string>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
     <string name="action_websearch">Web search</string>
@@ -66,8 +67,28 @@
     </string>
     <string name="offer_ride_congrats">Congratulations\nyou have won an award\nfor helping improve</string>
     <string name="facebook_app_not_available">Facebook application not found</string>
-    <string name="ask_ride_pending_travels">Offered travels</string>
+    <string name="ask_ride_pending_travels">Pending travels</string>
     <string name="ask_ride_offered_travels">Offered travels</string>
     <string name="ask_ride_ignore">Ignore</string>
     <string name="offer_ride">Offer ride</string>
+    <string name="old_password">Old password</string>
+    <string name="new_password">New password</string>
+    <string name="verify">Verify</string>
+    <string name="change_password">Change password</string>
+    <string name="my_profile">My Profile</string>
+    <string name="change_photo">Change photo</string>
+    <string name="nickname">Nickname</string>
+    <string name="email">Email</string>
+    <string name="location">Location</string>
+    <string name="your_home_address">Your home address</string>
+    <string name="sample_address">Eg: Santa Fe 3080, Capital Federal Buenos Aires, Argentina</string>
+    <string name="show_exact_address">Show exact address</string>
+    <string name="mendatory_fields">*Мandatory fields</string>
+    <string name="comments">Comments</string>
+    <string name="save_changes">Save changes</string>
+    <string name="use_the_last_photo_you_took">Use the last photo you took</string>
+    <string name="select_from_library">Select from library</string>
+    <string name="cancel">Cancel</string>
+    <string name="take_photo">Take photo</string>
+    <string name="change_community">Change community</string>
 </resources>

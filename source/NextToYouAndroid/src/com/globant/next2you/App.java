@@ -17,7 +17,8 @@ public class App extends Application {
 	private ImageLoaderConfiguration config;
 	private DisplayImageOptions options;
 	private ImageLoader loader;
-
+	public String currentCommunity = "";
+	
 	private static App app;
 
 	@Override

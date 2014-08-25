@@ -18,13 +18,19 @@ public class TransparentListOverlay extends View {
 	private Paint paint;
 	public static int markerSize;
 	private Path path;
+	public int fillColor = Color.WHITE;
 
 	public TransparentListOverlay(Context context, AttributeSet attr) {
 		super(context, attr);
 		init();
 	}
+	
+	public void changePaint(int color) {
+		fillColor = color;
+		paint.setColor(fillColor);
+	}
 
-	private void init() {
+	public void init() {
 		setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 		markerSize = Util.dpToPx(getContext(), 35);
 		paint = new Paint();
@@ -32,7 +38,7 @@ public class TransparentListOverlay extends View {
 		path = new Path();
 		path.addCircle(screenW / 2, screenH / 2, markerSize,
 				Path.Direction.CCW);
-		paint.setColor(Color.WHITE);
+		paint.setColor(fillColor);
 	}
 
 	@Override

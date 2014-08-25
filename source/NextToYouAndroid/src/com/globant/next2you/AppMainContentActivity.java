@@ -1,12 +1,15 @@
 package com.globant.next2you;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,7 +28,10 @@ import com.globant.next2you.util.UIUtils;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 
 public class AppMainContentActivity extends FragmentActivity {
+	private static final String TAG = "AppMainContentActivity";
+	public static final String UPDATE_COMMUNITY = "current_community";
 	private SlidingMenu slidingMenu;
+	private BroadcastReceiver receiver;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +39,14 @@ public class AppMainContentActivity extends FragmentActivity {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		
 		initAndOpenMapScreen();
+		
+		receiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				((TextView)findViewById(R.id.subtitle)).setText(App.app().currentCommunity);
+			}
+		};
+		registerReceiver(receiver , new IntentFilter(UPDATE_COMMUNITY));
 	}
 	
 	public void initAndOpenMapScreen() {
@@ -59,12 +73,29 @@ public class AppMainContentActivity extends FragmentActivity {
 		openSection(0);
 	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		try {
+			unregisterReceiver(receiver);
+		} catch (Exception e) {
+		}
+	}
+	
 	public void openSection(int idx) {
+		Log.d(TAG, "open section:" + idx);
 		Fragment fragment = null;
 		switch (idx) {
 		case 0:
 			fragment = new FragmentMap();
+			findViewById(R.id.subtitle).setVisibility(View.VISIBLE);
 			break;
+		case 3:
+			startActivity(new Intent(this, MyProfileActivity.class));
+			return;
+		case 2:
+			startActivity(new Intent(this, ChangeCommunityScreen.class));
+			return;
 		default:
 			break;
 		}
@@ -123,6 +154,14 @@ public class AppMainContentActivity extends FragmentActivity {
 							LoginActivity.class);
 					startActivity(i);
 					finish();
+				} else if(pos == 3) {
+					openSection(3);
+					slidingMenu.toggle(true);
+					toggleShadowOverlay();
+				} else if(pos == 2) {
+					openSection(2);
+					slidingMenu.toggle(true);
+					toggleShadowOverlay();
 				}
 			}
 		});
