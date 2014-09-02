@@ -3,7 +3,7 @@ package com.globant.next2you.objects;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
-public class Person implements ClusterItem{
+public class Person implements ClusterItem {
 	private int personId;
 	private String name;
 	private String email;

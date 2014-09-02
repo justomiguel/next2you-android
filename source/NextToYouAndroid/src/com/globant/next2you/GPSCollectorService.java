@@ -1,5 +1,7 @@
 package com.globant.next2you;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -136,6 +138,7 @@ public class GPSCollectorService extends Service implements
 				Intent i = new Intent(BROADCAST_INTENT_FILTER);
 				i.putExtra(LAT, Double.valueOf(lat));
 				i.putExtra(LON, Double.valueOf(lng));
+				App.app().userLocation = new LatLng(lat, lng);
 				i.putExtra(ACCURACY, accuracy);
 				sendBroadcast(i);
 			} catch (Exception e) {

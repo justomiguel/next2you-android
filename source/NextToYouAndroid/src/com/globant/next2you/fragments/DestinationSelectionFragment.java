@@ -1,6 +1,8 @@
 package com.globant.next2you.fragments;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
@@ -15,7 +17,10 @@ import android.content.pm.ResolveInfo;
 import android.database.DataSetObserver;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Html;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,24 +34,34 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.globant.next2you.App;
+import com.globant.next2you.App.State;
 import com.globant.next2you.AppMainContentActivity;
+import com.globant.next2you.GPSCollectorService;
 import com.globant.next2you.R;
 import com.globant.next2you.async.UICallback;
 import com.globant.next2you.kankan.wheel.widget.OnWheelChangedListener;
 import com.globant.next2you.kankan.wheel.widget.WheelView;
 import com.globant.next2you.kankan.wheel.widget.adapters.WheelViewAdapter;
 import com.globant.next2you.net.ApiServices;
+import com.globant.next2you.objects.CreateTravelRequest;
+import com.globant.next2you.objects.CreateTravelResponse;
 import com.globant.next2you.objects.Destination;
 import com.globant.next2you.objects.ListDestinationsResponse;
 import com.globant.next2you.util.UIUtils;
+import com.google.android.gms.maps.model.LatLngBounds;
 
 @SuppressLint("InflateParams")
 public class DestinationSelectionFragment extends BaseFragment {
 	private DestinationsAdapter adapter;
+	private boolean listExpanded = false;
+	private ListView destinationsList;
+	private View timerSetContainer;
+
 	@SuppressLint("InflateParams")
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -62,13 +77,14 @@ public class DestinationSelectionFragment extends BaseFragment {
 				new OnClickListener() {
 					@Override
 					public void onClick(View v) {
-						AppMainContentActivity activity = (AppMainContentActivity) getActivity();
-						activity.initAndOpenMapScreen();
+						doGoHome();
 					}
 				});
 
-		final ListView destinationsList = (ListView) rootView
+		destinationsList = (ListView) rootView
 				.findViewById(R.id.destinations_list);
+
+		timerSetContainer = rootView.findViewById(R.id.view_dialog);
 
 		App.getTaskManager().assignNet(new Callable<Object>() {
 
@@ -78,12 +94,15 @@ public class DestinationSelectionFragment extends BaseFragment {
 				return ApiServices.listDestinations(currentToken);
 			}
 		}, new UICallback() {
-
 			@Override
 			public void onResult(Object result) {
 				ListDestinationsResponse dest = (ListDestinationsResponse) result;
-				adapter = new DestinationsAdapter(
-						dest.getDestinations(), rootView);
+				ArrayList<Destination> destinations = dest.getDestinations();
+				if(destinations.size() > 0) {
+					App.app().currentDestination = destinations.get(0);
+				}
+				adapter = new DestinationsAdapter(destinations ,
+						rootView, timerSetContainer);
 				destinationsList
 						.setOnItemClickListener(new OnItemClickListener() {
 							@Override
@@ -94,14 +113,23 @@ public class DestinationSelectionFragment extends BaseFragment {
 								} else {
 									adapter.selectedPos = pos;
 								}
+								if(adapter.selectedPos != -1) {
+									adapter.putFirst(adapter.selectedPos);
+								}
 								adapter.notifyDataSetChanged();
 							}
 						});
 				destinationsList.setAdapter(adapter);
+				adapter.setupDialogView(0, timerSetContainer);
 			}
 		});
 
 		return rootView;
+	}
+
+	private void doGoHome() {
+		AppMainContentActivity activity = (AppMainContentActivity) getActivity();
+		activity.initAndOpenMapScreen();
 	}
 
 	@Override
@@ -109,7 +137,7 @@ public class DestinationSelectionFragment extends BaseFragment {
 		return "DestinationSelectionFragment";
 	}
 
-	private static class DestinationsAdapter extends BaseAdapter {
+	private class DestinationsAdapter extends BaseAdapter {
 
 		private final class DestinationWheelAdapter implements WheelViewAdapter {
 			private final WheelView wh;
@@ -172,22 +200,30 @@ public class DestinationSelectionFragment extends BaseFragment {
 
 		}
 
-
 		@SuppressWarnings("unused")
 		private static final String TAG = "DestinationsAdapter";
 		private ArrayList<Destination> destinations;
-		private int selectedPos = -1;
+		private int selectedPos = 0;
 		private View holder;
-		private AskRideScreen askRide;
+		private String[] hoursList;
+		private View timerSetContainer;
 
 		public DestinationsAdapter(ArrayList<Destination> destinations,
-				View rootView) {
+				View rootView, View timerSetContainer) {
 			this.destinations = destinations;
 			this.holder = rootView;
+			this.timerSetContainer = timerSetContainer;
+		}
+		
+		public void putFirst(int position) {
+			Collections.swap(destinations, 0, position);
 		}
 
 		@Override
 		public int getCount() {
+			if (!listExpanded) {
+				return 1;
+			}
 			return destinations.size();
 		}
 
@@ -203,50 +239,44 @@ public class DestinationSelectionFragment extends BaseFragment {
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			if (position == selectedPos) {
-				return getViewForSelectedPosition(position, convertView, parent);
-			} else {
-				return getViewForNonSelectedItem(position, convertView, parent);
-			}
+			// if (position == selectedPos) {
+			// return getViewForSelectedPosition(position, convertView, parent);
+			// } else {
+			// }
+
+			return getViewForNonSelectedItem(position, convertView, parent,
+					timerSetContainer);
 		}
 
-		private View getViewForSelectedPosition(int position, View convertView,
-				ViewGroup parent) {
-			Context ctx = parent.getContext();
-			if (convertView != null) {
-				int type = ((Integer) convertView.getTag()).intValue();
-				if (type != 2) {
-					convertView = null;
-				}
-			}
-			View rootView = convertView;
-			if (rootView == null) {
-				rootView = LayoutInflater.from(ctx).inflate(
-						R.layout.destination_list_item_selected, null);
-			}
+		public View setupDialogView(int position, View view) {
+			Log.d(TAG, "total positions:" + destinations.size() + ";cur pos="
+					+ position);
+			Context ctx = view.getContext();
+			View rootView = view;
 			rootView.setTag(Integer.valueOf(2));
 			TextView lbl = (TextView) rootView.findViewById(R.id.lbl);
 			UIUtils.prepareTextView(ctx, lbl);
-			TextView title = (TextView) rootView.findViewById(R.id.title);
-			title.setText(destinations.get(position).getName());
-			UIUtils.prepareTextView(ctx, title);
 
-			ImageView img = (ImageView) rootView.findViewById(R.id.img);
-			img.setImageResource(R.drawable.arrow_down);
-			img.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+			// ImageView img = (ImageView) rootView.findViewById(R.id.img);
+			// img.setImageResource(R.drawable.arrow_down);
+			// img.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
 
-			WheelView wh1 = (WheelView) rootView.findViewById(R.id.wheel1);
-			initWheelView(wh1, new String[] { "1", "2", "3", "4", "5", "6",
-					"7", "8", "9", "10", "11", "12" });
+			final WheelView wh1 = (WheelView) rootView
+					.findViewById(R.id.wheel1);
+			hoursList = new String[] { "1", "2", "3", "4", "5", "6", "7", "8",
+					"9", "10", "11", "12" };
+			initWheelView(wh1, hoursList);
 
 			String[] mins = new String[60];
 			for (int i = 0; i < mins.length; i++) {
 				mins[i] = String.valueOf(i);
 			}
-			WheelView wh2 = (WheelView) rootView.findViewById(R.id.wheel2);
+			final WheelView wh2 = (WheelView) rootView
+					.findViewById(R.id.wheel2);
 			initWheelView(wh2, mins);
 
-			WheelView wh3 = (WheelView) rootView.findViewById(R.id.wheel3);
+			final WheelView wh3 = (WheelView) rootView
+					.findViewById(R.id.wheel3);
 			initWheelView(wh3, new String[] { "Pm", "Am" });
 
 			TextView dots = (TextView) rootView.findViewById(R.id.dots);
@@ -254,30 +284,30 @@ public class DestinationSelectionFragment extends BaseFragment {
 
 			Button offerBtn = (Button) rootView.findViewById(R.id.travel_offer);
 			UIUtils.prepareTextView(ctx, offerBtn);
-			offerBtn.setOnClickListener(getOfferButtonOnClickListener(ctx));
-
-			Button askBtn = (Button) rootView.findViewById(R.id.travel_ask);
-			UIUtils.prepareTextView(ctx, askBtn);
-			askBtn.setOnClickListener(getAskButtonOnClickListener(ctx));
-
-			return rootView;
-		}
-
-		private OnClickListener getAskButtonOnClickListener(final Context ctx) {
-			return new OnClickListener() {
-
+			offerBtn.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					setAskRide(new AskRideScreen(ctx));
-					getAskRide().initialize(holder);
-				}
-			};
-		}
+					final Context ctx = v.getContext();
+					final String totalInterval = getTotalInterval(wh1, wh2, wh3);
+					if (totalInterval == null) {
+						return;
+					}
+					App.getTaskManager().assignNet(new Callable<Object>() {
+						@Override
+						public Object call() throws Exception {
+							LatLngBounds bounds = App.app().mapBounds;
+							CreateTravelRequest request = new CreateTravelRequest(
+									bounds.northeast.latitude,
+									bounds.northeast.longitude,
+									bounds.southwest.latitude,
+									bounds.southwest.longitude, true,
+									totalInterval);
+							ApiServices.createTravel(App.app().getAuth()
+									.getToken(), request);
+							return null;
+						}
+					});
 
-		private OnClickListener getOfferButtonOnClickListener(final Context ctx) {
-			return new OnClickListener() {
-				@Override
-				public void onClick(View v) {
 					LayoutInflater inflater = LayoutInflater.from(ctx);
 					final LinearLayout dialogHolder = (LinearLayout) holder
 							.findViewById(R.id.dialog_holder);
@@ -301,7 +331,7 @@ public class DestinationSelectionFragment extends BaseFragment {
 					UIUtils.prepareTextView(ctx, titleLine1);
 					UIUtils.prepareTextView(ctx, titleLine3);
 
-					//dialogHolder.addView(offerDialogView);
+					// dialogHolder.addView(offerDialogView);
 					dialogHolder.setVisibility(View.VISIBLE);
 
 					TextView ribbonText = (TextView) offerDialogView
@@ -341,7 +371,150 @@ public class DestinationSelectionFragment extends BaseFragment {
 								}
 							});
 				}
-			};
+			});
+
+			Button askBtn = (Button) rootView.findViewById(R.id.travel_ask);
+			UIUtils.prepareTextView(ctx, askBtn);
+			askBtn.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(final View v) {
+					App.getTaskManager().assignNet(new Callable<Object>() {
+						@Override
+						public Object call() throws Exception {
+							LatLngBounds bounds = App.app().mapBounds;
+							String totalInterval = getTotalInterval(wh1, wh2,
+									wh3);
+							if (totalInterval == null) {
+								return null;
+							}
+							double toLongitude = 0;
+							double toLatitude = 0;
+							Destination selectedDest = destinations
+									.get(selectedPos);
+							
+							App.app().currentDestination = selectedDest;
+							if (selectedDest != null) {
+								toLatitude = selectedDest.getLatitude();
+								toLongitude = selectedDest.getLongitude();
+							}
+							if (selectedDest.getName().toLowerCase().equals("casa")) {
+								toLatitude = App.app().userLocation.latitude;
+								toLongitude = App.app().userLocation.longitude;
+							}
+							
+							CreateTravelRequest request = new CreateTravelRequest(
+									bounds.northeast.latitude,
+									bounds.northeast.longitude,
+									toLongitude,
+									toLatitude, true,
+									totalInterval);
+							CreateTravelResponse createTravelResponse = ApiServices
+									.createTravel(App.app().getAuth()
+											.getToken(), request);
+							return createTravelResponse;
+						}
+					}, new UICallback() {
+						@Override
+						public void onResult(Object result) {
+							CreateTravelResponse createTravelResponse = (CreateTravelResponse) result;
+							App.app().userState = State.ASK;
+							App.app().setCurrentTravelId(createTravelResponse.getTravelId());
+							showPendingOffersAlert(v);
+						}
+					});
+				}
+
+				private void showPendingOffersAlert(View v) {
+					final Context ctx = v.getContext();
+					LayoutInflater inflater = LayoutInflater.from(ctx);
+					final LinearLayout dialogHolder = (LinearLayout) holder
+							.findViewById(R.id.dialog_holder);
+					dialogHolder.removeAllViews();
+					final View offerTravelDialog = inflater.inflate(
+							R.layout.offer_travel_dialog, dialogHolder);
+					dialogHolder.setVisibility(View.VISIBLE);
+
+					// setup notification text
+					TextView notificationText = (TextView) offerTravelDialog
+							.findViewById(R.id.notification_text);
+					UIUtils.prepareTextView(ctx, notificationText);
+					String formatted = ctx.getResources().getString(
+							R.string.offer_ride_notification_text);
+					// TODO this should be equal to the number of items in the
+					// corresponding tab
+					formatted = String.format(Locale.US, formatted,
+							Integer.valueOf(5));
+					notificationText.setText(Html.fromHtml(formatted));
+
+					// setup ribbon text
+					TextView ribbonTxt = (TextView) offerTravelDialog
+							.findViewById(R.id.ribbon_text);
+					UIUtils.prepareTextView(ctx, ribbonTxt);
+					ribbonTxt.setText(String.format(Locale.US,
+							ctx.getString(R.string.travels_done),
+							Integer.valueOf(5)));
+
+					// setup close handle
+					dialogHolder.findViewById(R.id.close_notification)
+							.setOnClickListener(new OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									dialogHolder.removeView(dialogHolder);
+									dialogHolder.setVisibility(View.GONE);
+
+									// trigger refresh of clusters
+									Intent intent = new Intent(
+											GPSCollectorService.BROADCAST_INTENT_FILTER);
+									intent.putExtra(GPSCollectorService.LAT,
+											Float.NaN);
+									intent.putExtra(GPSCollectorService.LON,
+											Float.NaN);
+									ctx.sendBroadcast(intent);
+
+									doGoHome();
+								}
+							});
+				}
+			});
+
+			return rootView;
+		}
+
+		private String getTotalInterval(final WheelView wh1,
+				final WheelView wh2, final WheelView wh3) {
+			long curTime = System.currentTimeMillis() / 1000;
+
+			Calendar c = Calendar.getInstance();
+			c.set(Calendar.HOUR,
+					Integer.parseInt(hoursList[wh1.getCurrentItem()]));
+			c.set(Calendar.MINUTE, wh2.getCurrentItem());
+			c.set(Calendar.AM_PM, wh3.getCurrentItem() == 0 ? Calendar.PM
+					: Calendar.PM);
+			Log.d(TAG,
+					"set current " + wh1.getCurrentItem() + ":"
+							+ wh2.getCurrentItem() + ":" + wh3.getCurrentItem());
+			long selectedTime = c.getTimeInMillis() / 1000;
+
+			int minsDiff = (int) ((selectedTime - curTime) / 60);
+			int hrsDiff = minsDiff / 60;
+			int mntsDiff = minsDiff % 60;
+
+			final String totalInterval = hrsDiff + ":" + mntsDiff;
+			Log.d(TAG, "totalInterval:" + totalInterval);
+
+			if (minsDiff < 0) {
+				new Handler(Looper.getMainLooper()).post(new Runnable() {
+					@Override
+					public void run() {
+						Toast.makeText(wh1.getContext(),
+								R.string.invalid_timespan_selected,
+								Toast.LENGTH_SHORT).show();
+					}
+				});
+				return null;
+			}
+			return totalInterval;
 		}
 
 		private void postTweet(Context ctx) {
@@ -405,10 +578,29 @@ public class DestinationSelectionFragment extends BaseFragment {
 			};
 			wh.addChangingListener(changedListener);
 			wh.setViewAdapter(new DestinationWheelAdapter(wh, items));
+			int[] components = getDateComponents();
+			for (int i = 0; i < components.length; i++) {
+				Log.d(TAG, "components " + i + "=" + components[i]);
+			}
+			if (wh.getId() == R.id.wheel1) {
+				wh.setCurrentItem(components[0] - 1);
+			} else if (wh.getId() == R.id.wheel3) {
+				wh.setCurrentItem(components[3] == 0 ? 0 : 1);
+			} else if (wh.getId() == R.id.wheel2) {
+				wh.setCurrentItem(components[1]);
+			}
+		}
+
+		private int[] getDateComponents() {
+			Calendar c = Calendar.getInstance();
+			return new int[] {
+					c.get(Calendar.HOUR) == 0 ? 12 : c.get(Calendar.HOUR),
+					c.get(Calendar.MINUTE), c.get(Calendar.SECOND),
+					c.get(Calendar.AM_PM) == Calendar.AM ? 1 : 0 };
 		}
 
 		private View getViewForNonSelectedItem(int position, View convertView,
-				ViewGroup parent) {
+				ViewGroup parent, final View timerSetContainer) {
 			if (convertView != null) {
 				int type = ((Integer) convertView.getTag()).intValue();
 				if (type != 1) {
@@ -417,7 +609,7 @@ public class DestinationSelectionFragment extends BaseFragment {
 			}
 			View view = convertView;
 			TextView title;
-			Context ctx = parent.getContext();
+			final Context ctx = parent.getContext();
 			if (view == null) {
 				view = LayoutInflater.from(ctx).inflate(
 						R.layout.destination_list_item, null);
@@ -427,27 +619,36 @@ public class DestinationSelectionFragment extends BaseFragment {
 			UIUtils.prepareTextView(ctx, title);
 			title.setText(destinations.get(position).getName());
 
-			ImageView img = (ImageView) view.findViewById(R.id.img);
-			img.setImageResource(R.drawable.arrow_up);
+			final ImageView img = (ImageView) view.findViewById(R.id.img);
+			img.setImageResource(listExpanded ? R.drawable.arrow_up : R.drawable.arrow_down);
 			img.setTag(Integer.valueOf(position));
+			img.setClickable(true);
+			img.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+			img.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					listExpanded = !listExpanded;
+					img.setImageResource(listExpanded ? R.drawable.arrow_up : R.drawable.arrow_down);
+					BaseAdapter adapter = (BaseAdapter) destinationsList
+							.getAdapter();
+					adapter.notifyDataSetChanged();
+					int bCol = ctx.getResources().getColor(listExpanded ? 
+							R.color.shadow : R.color.login_background);
+					destinationsList.setBackgroundColor(bCol);
+					
+					RelativeLayout.LayoutParams params = (android.widget.RelativeLayout.LayoutParams) destinationsList
+							.getLayoutParams();
+					params.height = listExpanded ? android.widget.RelativeLayout.LayoutParams.MATCH_PARENT
+							: android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT;
+					destinationsList.setLayoutParams(params);
 
-			if (position != destinations.size() - 1) {
-				title.setTextColor(Color.WHITE);
-			} else {
-				title.setTextColor(ctx.getResources().getColor(R.color.purple));
-			}
+				}
+			});
+			
+			title.setTextColor(Color.WHITE);
 			img.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
 
 			return view;
 		}
-
-		public AskRideScreen getAskRide() {
-			return askRide;
-		}
-
-		public void setAskRide(AskRideScreen askRide) {
-			this.askRide = askRide;
-		}
-
 	}
 }

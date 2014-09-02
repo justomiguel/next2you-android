@@ -16,7 +16,7 @@ public class TransparentListOverlay extends View {
 	private float screenW;
 	private float screenH;
 	private Paint paint;
-	public static int markerSize;
+	public int markerSize;
 	private Path path;
 	public int fillColor = Color.WHITE;
 

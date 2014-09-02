@@ -34,6 +34,8 @@
     <string name="login_reset_ok">Password reset successful</string>
     <string name="login_reset_failed">Password reset failed</string>
     <string name="login_failed">Login failed</string>
+    
+    <string name="travels_done">%d Travels done</string>
 
     <!-- Sliding menu options -->
     <string-array name="sliding_menu_opitions">
@@ -44,7 +46,17 @@
         <item>Logout</item>
     </string-array>
 
-    <string name="main_content_community_globant">Community Globant</string>
+    <string name="offer_ride_notification_text">
+         <![CDATA[
+        	<font color="#693690">You asked to share your<br/> travel with:</font> 
+        	<font color="#46d055"><b>%d persons</b></font><br/>
+        	<font color="#693690">which are going to your<br/>destination and which are<br/> near you now</font>
+        ]]>
+    </string>
+    
+    <string name="invalid_timespan_selected">Invalid timespan has been selected</string>
+    
+    <string name="main_content_community_globant">Community</string>
     <string name="close_notification">Close notification</string>
     <string name="notification">Notification</string>
     <string name="go_to">I go to&#8230;</string>
@@ -83,7 +95,7 @@
     <string name="your_home_address">Your home address</string>
     <string name="sample_address">Eg: Santa Fe 3080, Capital Federal Buenos Aires, Argentina</string>
     <string name="show_exact_address">Show exact address</string>
-    <string name="mendatory_fields">*Мandatory fields</string>
+    <string name="mendatory_fields">&#42; Mandatory fields</string>
     <string name="comments">Comments</string>
     <string name="save_changes">Save changes</string>
     <string name="use_the_last_photo_you_took">Use the last photo you took</string>
@@ -91,4 +103,9 @@
     <string name="cancel">Cancel</string>
     <string name="take_photo">Take photo</string>
     <string name="change_community">Change community</string>
+    
+    <!-- My profile errors -->
+    <string name="my_profile_fill_email">Please fill in your email</string>
+    <string name="my_profile_fill_nickname">Please fill in your nickname</string>
+    <string name="my_profile_fill_address">Please fill in your home address</string>
 </resources>

@@ -3,7 +3,6 @@ package com.globant.next2you;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,28 +21,34 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.ByteArrayBody;
-import org.apache.http.entity.mime.content.ContentBody;
-import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
+import android.animation.Animator;
+import android.animation.Animator.AnimatorListener;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.ParseException;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
@@ -53,10 +58,10 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.globant.next2you.async.UICallback;
+import com.globant.next2you.fragments.NotificationDialog;
 import com.globant.next2you.net.ApiServices;
 import com.globant.next2you.objects.Destination;
 import com.globant.next2you.objects.ListDestinationsResponse;
@@ -93,6 +98,9 @@ public class MyProfileActivity extends FragmentActivity {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.my_profile);
 
+		getWindow().setSoftInputMode(
+				WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+
 		TextView myProfileTitle = (TextView) findViewById(R.id.my_profile_title);
 		TextView changePhoto = (TextView) findViewById(R.id.change_photo_btn);
 		TextView showExactAddr = (TextView) findViewById(R.id.show_exact_addr);
@@ -102,18 +110,113 @@ public class MyProfileActivity extends FragmentActivity {
 		scrollView = (LockableScrollView) findViewById(R.id.scroll_view);
 		rootView = (RelativeLayout) findViewById(R.id.rootview);
 
+		setupAvatarUI();
+
+		setupLocationsDropDown();
+
+		address = (EditText) findViewById(R.id.address);
+		TextView sampleAddress = (TextView) findViewById(R.id.example_address);
+		UIUtils.prepareTextView(this, sampleAddress);
+		TextView mendatoryFields = (TextView) findViewById(R.id.mendatory_fields_holder);
+		comments = (EditText) findViewById(R.id.comments);
+		saveChanges = (Button) findViewById(R.id.save_changes);
+		saveChanges.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				saveChanges.setEnabled(false);
+				updatePerson();
+			}
+		});
+
+		UIUtils.prepareTextView(this, showExactAddr);
+		UIUtils.prepareTextView(this, saveChanges);
+		UIUtils.prepareTextView(this, comments);
+		UIUtils.prepareTextView(this, mendatoryFields);
+		UIUtils.prepareTextView(this, address);
+		UIUtils.prepareTextView(this, email);
+		UIUtils.prepareTextView(this, locationSelection);
+		UIUtils.prepareTextView(this, nickname);
+		UIUtils.prepareTextView(this, changePhoto);
+		UIUtils.prepareTextView(this, myProfileTitle);
+		final ImageView showLocation = (ImageView) findViewById(R.id.loc_status);
+		findViewById(R.id.exact_addr_holder).setOnClickListener(
+				new OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						showAddress = !showAddress;
+						showLocation
+								.setImageResource(showAddress ? R.drawable.show_location_on
+										: R.drawable.show_location_off);
+					}
+				});
+
+		loadAndShowAvatar(showLocation);
+		setupGoBackBtn();
+	}
+
+	private void setupGoBackBtn() {
+		findViewById(R.id.go_back).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				finish();
+				overridePendingTransition(R.anim.slide_out_animation,
+						R.anim.slide_in_animation);
+			}
+		});
+	}
+
+	private void loadAndShowAvatar(final ImageView showLocation) {
+		App.getTaskManager().assignNet(new Callable<Object>() {
+			@Override
+			public Object call() throws Exception {
+				Person p = ApiServices.getPerson(App.app().getAuth().getToken());
+				return p;
+			}
+		}, new UICallback() {
+
+			@Override
+			public void onResult(Object result) {
+				Person p = ((Person) result);
+				currentPerson = p;
+				ImageView avatarPic = (ImageView) findViewById(R.id.avatar);
+				String userImage = p.getImage();
+				String avatarPicUrl = String.format(Locale.US, "%simages/%s",
+						ApiServices.API_URL, userImage);
+
+				App.loadImage(avatarPicUrl, avatarPic);
+				nickname.setText(p.getNickname());
+				email.setText(p.getEmail());
+				address.setText(p.getAddress());
+				comments.setText(p.getComments());
+				loadDestinations(p);
+				showAddress = p.getIsAddressVisible();
+				showLocation
+						.setImageResource(showAddress ? R.drawable.show_location_on
+								: R.drawable.show_location_off);
+			}
+		});
+
+		TransparentListOverlay t = (TransparentListOverlay) findViewById(R.id.avatar_overlay);
+		t.changePaint(getResources().getColor(R.color.grapefruit));
+		t.markerSize = Util.dpToPx(this, 90);
+		t.init();
+		t.invalidate();
+	}
+
+	private void setupAvatarUI() {
 		TextView useLastPhoto = (TextView) findViewById(R.id.use_last_photo);
 		TextView takeNewPhoto = (TextView) findViewById(R.id.take_new_photo);
 		TextView selectFromLibrary = (TextView) findViewById(R.id.select_from_library);
 		TextView cancel = (TextView) findViewById(R.id.cancel_photo);
-		cancel.setOnClickListener(new OnClickListener() {
+		OnClickListener closeAddPhotoHolderListener = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				View view = findViewById(R.id.add_photo_holder);
-				view.setVisibility(View.GONE);
-				scrollView.setScrollingEnabled(true);
+				closeAddPhotoHolder();
 			}
-		});
+		};
+		cancel.setOnClickListener(closeAddPhotoHolderListener);
+		// findViewById(R.id.close_add_photo_holder_top).setOnClickListener(closeAddPhotoHolderListener);
+		// findViewById(R.id.close_add_photo_holder_bottom).setOnClickListener(closeAddPhotoHolderListener);
 		useLastPhoto.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -150,6 +253,10 @@ public class MyProfileActivity extends FragmentActivity {
 				scrollView.setScrollingEnabled(true);
 			}
 		});
+		UIUtils.prepareTextView(this, cancel);
+		UIUtils.prepareTextView(this, useLastPhoto);
+		UIUtils.prepareTextView(this, takeNewPhoto);
+		UIUtils.prepareTextView(this, selectFromLibrary);
 
 		findViewById(R.id.avatar_holder).setOnClickListener(
 				new OnClickListener() {
@@ -167,114 +274,101 @@ public class MyProfileActivity extends FragmentActivity {
 								.getLayoutParams();
 						params.height = height;
 						view.setLayoutParams(params);
+						scrollView.scrollTo(0, 0);
 						scrollView.setScrollingEnabled(false);
+						hideKeyboard();
 					}
 				});
+	}
 
+	private void setupLocationsDropDown() {
 		locationSelection.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				Log.d(TAG, "show locations");
 				if (destinations.size() > 0) {
-					locationsList.setVisibility(View.VISIBLE);
-					destListShown = true;
-					adapter.notifyDataSetChanged();
+					View scrollAssistant = findViewById(R.id.scroll_assistant);
+					scrollAssistant.setVisibility(View.VISIBLE);
+					new Handler(Looper.getMainLooper()).post(new Runnable() {
+						@Override
+						public void run() {
+							destListShown = true;
+							adapter.notifyDataSetChanged();
 
-					int height = getWindow().getDecorView().getHeight()
-							- (int) getResources().getDimension(
-									R.dimen.login_screen_header_height);
-					RelativeLayout.LayoutParams params = (LayoutParams) locationsList
-							.getLayoutParams();
-					params.height = height;
-					locationsList.setLayoutParams(params);
-					scrollView.scrollTo(0, 0);
-					scrollView.setScrollingEnabled(false);
+							int height = getWindow().getDecorView().getHeight()
+									/*- (int) getResources().getDimension(
+											R.dimen.login_screen_header_height)*/;
+							RelativeLayout.LayoutParams params = (LayoutParams) locationsList
+									.getLayoutParams();
+							params.height = height;
+							locationsList.setLayoutParams(params);
+							scrollView.scrollTo(0, 0);
+							scrollView.setScrollingEnabled(false);
+							ObjectAnimator yTranslate = ObjectAnimator.ofInt(
+									scrollView, "scrollY",
+									locationsList.getTop());
+							AnimatorSet animators = new AnimatorSet();
+							animators.setDuration(500L);
+							animators.playTogether(yTranslate);
+							animators.addListener(new AnimatorListener() {
+								@Override
+								public void onAnimationStart(Animator animation) {
+								}
+
+								@Override
+								public void onAnimationRepeat(Animator animation) {
+								}
+
+								@Override
+								public void onAnimationEnd(Animator animation) {
+									locationsList.setVisibility(View.VISIBLE);
+									hideKeyboard();
+								}
+
+								@Override
+								public void onAnimationCancel(Animator animation) {
+								}
+							});
+							animators.start();
+						}
+					});
 				}
 			}
 		});
+	}
 
-		address = (EditText) findViewById(R.id.address);
-		TextView sampleAddress = (TextView) findViewById(R.id.example_address);
-		TextView mendatoryFields = (TextView) findViewById(R.id.mendatory_fields_holder);
-		comments = (EditText) findViewById(R.id.comments);
-		saveChanges = (Button) findViewById(R.id.save_changes);
-		saveChanges.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				saveChanges.setEnabled(false);
-				updatePerson();
+	private void closeAddPhotoHolder() {
+		View view = findViewById(R.id.add_photo_holder);
+		view.setVisibility(View.GONE);
+		scrollView.setScrollingEnabled(true);
+	}
+
+	private void hideKeyboard() {
+		try {
+			InputMethodManager inputManager = (InputMethodManager) this
+					.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+			View view = this.getCurrentFocus();
+			if (view == null) {
+				return;
 			}
-		});
+			inputManager.hideSoftInputFromWindow(view.getWindowToken(),
+					InputMethodManager.HIDE_NOT_ALWAYS);
+			view.clearFocus();
+		} catch (Exception e) {
+			Log.e(TAG, "", e);
+		}
+	}
 
-		UIUtils.prepareTextView(this, cancel);
-		UIUtils.prepareTextView(this, useLastPhoto);
-		UIUtils.prepareTextView(this, takeNewPhoto);
-		UIUtils.prepareTextView(this, selectFromLibrary);
-		UIUtils.prepareTextView(this, showExactAddr);
-		UIUtils.prepareTextView(this, saveChanges);
-		UIUtils.prepareTextView(this, comments);
-		UIUtils.prepareTextView(this, mendatoryFields);
-		UIUtils.prepareTextView(this, address);
-		UIUtils.prepareTextView(this, email);
-		UIUtils.prepareTextView(this, sampleAddress);
-		UIUtils.prepareTextView(this, locationSelection);
-		UIUtils.prepareTextView(this, nickname);
-		UIUtils.prepareTextView(this, changePhoto);
-		UIUtils.prepareTextView(this, myProfileTitle);
-		final ImageView showLocation = (ImageView) findViewById(R.id.loc_status);
-		findViewById(R.id.exact_addr_holder).setOnClickListener(
-				new OnClickListener() {
-					@Override
-					public void onClick(View v) {
-						showAddress = !showAddress;
-						showLocation
-								.setImageResource(showAddress ? R.drawable.show_location_on
-										: R.drawable.show_location_off);
-					}
-				});
-
-		App.getTaskManager().assignNet(new Callable<Object>() {
-			@Override
-			public Object call() throws Exception {
-				Person p = ApiServices.getPerson(App.app().getAuth().getToken());
-				return p;
-			}
-		}, new UICallback() {
-
-			@Override
-			public void onResult(Object result) {
-				Person p = ((Person) result);
-				currentPerson = p;
-				ImageView avatarPic = (ImageView) findViewById(R.id.avatar);
-				String userImage = p.getImage();
-				String avatarPicUrl = String.format(Locale.US, "%simages/%s",
-						ApiServices.API_URL, userImage);
-
-				App.loadImage(avatarPicUrl, avatarPic);
-				nickname.setText(p.getNickname());
-				email.setText(p.getEmail());
-				address.setText(p.getAddress());
-				comments.setText(p.getComments());
-				loadDestinations(p);
-				showAddress = p.getIsAddressVisible();
-				showLocation
-						.setImageResource(showAddress ? R.drawable.show_location_on
-								: R.drawable.show_location_off);
-			}
-		});
-
-		TransparentListOverlay t = (TransparentListOverlay) findViewById(R.id.avatar_overlay);
-		t.changePaint(getResources().getColor(R.color.grapefruit));
-		t.markerSize = Util.dpToPx(this, 90);
-		t.init();
-		t.invalidate();
-
-		findViewById(R.id.go_back).setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				finish();
-			}
-		});
+	@Override
+	public void onBackPressed() {
+		if (destListShown) {
+			closeList();
+		} else if (findViewById(R.id.add_photo_holder).getVisibility() == View.VISIBLE) {
+			closeAddPhotoHolder();
+		} else {
+			super.onBackPressed();
+		}
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -301,12 +395,11 @@ public class MyProfileActivity extends FragmentActivity {
 
 					@Override
 					public Object call() throws Exception {
-						String url = String.format(Locale.US,
-								"%s%s", ApiServices.API_URL, "images");
-						upload(url, bitmapF);
-//						String res = multipartRequest(url , "",
-//								bitmapF, "file");
-//						Log.d(TAG, "bitmap upload result:" + res);
+						String url = String.format(Locale.US, "%s%s",
+								ApiServices.API_URL, "images");
+						// upload(url, bitmapF);
+						String res = multipartRequest(url, "", bitmapF, "file");
+						Log.d(TAG, "bitmap upload result:" + res);
 						return null;
 					}
 				});
@@ -401,10 +494,13 @@ public class MyProfileActivity extends FragmentActivity {
 	}
 
 	private void closeList() {
-		destListShown = false;
-		adapter.notifyDataSetChanged();
-		locationsList.setVisibility(View.GONE);
-		scrollView.setScrollingEnabled(true);
+		if (destListShown) {
+			destListShown = false;
+			adapter.notifyDataSetChanged();
+			locationsList.setVisibility(View.GONE);
+			findViewById(R.id.scroll_assistant).setVisibility(View.GONE);
+			scrollView.setScrollingEnabled(true);
+		}
 	}
 
 	private void updatePerson() {
@@ -412,20 +508,27 @@ public class MyProfileActivity extends FragmentActivity {
 			@Override
 			public Object call() throws Exception {
 				String emailStr = email.getText().toString();
-				if (emailStr.length() > 0) {
+				if (emailStr.length() > 0 && isValidEmail(emailStr)) {
 					currentPerson.setEmail(emailStr);
+				} else {
+					return R.string.my_profile_fill_email;
 				}
 				String nicknameStr = nickname.getText().toString();
 				if (nicknameStr.length() > 0) {
 					currentPerson.setNickname(nicknameStr);
+				} else {
+					return R.string.my_profile_fill_nickname;
 				}
 				String commentsStr = comments.getText().toString();
-				if (commentsStr.length() > 0) {
-					currentPerson.setComments(commentsStr);
+				if(commentsStr == null) {
+					commentsStr = "";
 				}
+				currentPerson.setComments(commentsStr);
 				String addressStr = address.getText().toString();
 				if (addressStr.length() > 0) {
 					currentPerson.setAddress(addressStr);
+				} else {
+					return R.string.my_profile_fill_address;
 				}
 				currentPerson.setIsAddressVisible(showAddress);
 				String location = locationSelection.getText().toString();
@@ -437,23 +540,49 @@ public class MyProfileActivity extends FragmentActivity {
 				String resp = ApiServices.updatePerson(App.app().getAuth()
 						.getToken(), currentPerson);
 				Log.d(TAG, "update person response:" + resp);
-				return null;
+				return 0;
 			}
 		}, new UICallback() {
 			@Override
 			public void onResult(Object result) {
-				finish();
+				int resId = (Integer) result;
+				if (resId != 0) {
+					saveChanges.setEnabled(true);
+					showMandatoryFieldWarning(resId);
+				} else {
+					finish();
+					overridePendingTransition(R.anim.slide_out_animation,
+							R.anim.slide_out_animation);
+				}
 			}
 		});
 	}
+	
+	public final boolean isValidEmail(CharSequence target) {
+		if (TextUtils.isEmpty(target)) {
+			return false;
+		} else {
+			return android.util.Patterns.EMAIL_ADDRESS.matcher(target)
+					.matches();
+		}
+	}
+
+	private void showMandatoryFieldWarning(final int resId) {
+		NotificationDialog dialog = new NotificationDialog(
+				MyProfileActivity.this);
+		dialog.setMessage(resId);
+		dialog.show();
+	}
 
 	public void upload(String url, Bitmap bitmap) throws Exception {
-		Log.d(TAG, "upload " + bitmap + " to " + url + " with token " + App.app().getAuth().getToken());
+		Log.d(TAG, "upload " + bitmap + " to " + url + " with token "
+				+ App.app().getAuth().getToken());
 		HttpClient client = new DefaultHttpClient();
 		HttpPost post = new HttpPost(url);
 		post.setHeader("Authorization", App.app().getAuth().getToken());
+		post.setHeader("Content-Type",
+				"multipart/form-data; boundary=----NextBoundaryxsg77blN4ea8Kcgv");
 		MultipartEntity mpEntity = new MultipartEntity();
-
 		// Add the data to the multipart entity
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		bitmap.compress(Bitmap.CompressFormat.PNG, 50, stream);
@@ -493,18 +622,19 @@ public class MyProfileActivity extends FragmentActivity {
 			connection = (HttpURLConnection) url.openConnection();
 
 			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Connection", "Keep-Alive");
 			connection.setRequestProperty("Content-Type",
 					"multipart/form-data; boundary=" + boundary);
 			connection.setRequestProperty("User-Agent",
-					"Mozilla/5.0 ( compatible ) ");
-			connection.setRequestProperty("Accept", "*/*");
-			connection.addRequestProperty("Authorization", App.app().getAuth()
+					"Next2You/1.0 (iPhone Simulator; iOS 7.1; Scale/2.00)");
+			connection
+					.setRequestProperty("Accept-Language",
+							"en;q=1, fr;q=0.9, de;q=0.8, zh-Hans;q=0.7, zh-Hant;q=0.6, ja;q=0.5");
+			connection.setRequestProperty("Authorization", App.app().getAuth()
 					.getToken());
-			Map<String, List<String>> headers = connection.getHeaderFields();
-			for (String k : headers.keySet()) {
-				Log.d(TAG, "name=" + k + " value=" + headers.get(k));
-			}
+			// Map<String, List<String>> headers = connection.getHeaderFields();
+			// for (String k : headers.keySet()) {
+			// Log.d(TAG, "name=" + k + " value=" + headers.get(k));
+			// }
 
 			connection.setDoInput(true);
 			connection.setDoOutput(true);
@@ -514,14 +644,14 @@ public class MyProfileActivity extends FragmentActivity {
 			outputStream.writeBytes(twoHyphens + boundary + lineEnd);
 			outputStream.writeBytes("Content-Disposition: form-data; name=\""
 					+ filefield + "\"; filename=\"file.jpg\"" + lineEnd);
-			outputStream.writeBytes("Content-Type: image/jpeg" + lineEnd);
-			outputStream.writeBytes("Content-Transfer-Encoding: binary"
+			outputStream.writeBytes("Content-Type:image/jpeg" + lineEnd
 					+ lineEnd);
-			outputStream.writeBytes(lineEnd);
+			// outputStream.writeBytes("Content-Transfer-Encoding: binary"
+			// + lineEnd);
 
-			// ByteArrayOutputStream stream = new ByteArrayOutputStream();
-			// bitmap.compress(Bitmap.CompressFormat.PNG, 50, stream);
-			byte[] byteArray = new byte[1];// stream.toByteArray();
+			ByteArrayOutputStream stream = new ByteArrayOutputStream();
+			bitmap.compress(Bitmap.CompressFormat.PNG, 50, stream);
+			byte[] byteArray = stream.toByteArray();
 			outputStream.write(byteArray);
 
 			outputStream.writeBytes(lineEnd);
@@ -543,6 +673,8 @@ public class MyProfileActivity extends FragmentActivity {
 
 			outputStream.writeBytes(twoHyphens + boundary + twoHyphens
 					+ lineEnd);
+			outputStream.flush();
+			outputStream.close();
 
 			int responsecode = 0;
 			try {
@@ -569,8 +701,6 @@ public class MyProfileActivity extends FragmentActivity {
 			result = this.convertStreamToString(inputStream);
 
 			inputStream.close();
-			outputStream.flush();
-			outputStream.close();
 			return result;
 		} catch (Exception e) {
 			Log.e(TAG, "Multipart Form Upload Error", e);

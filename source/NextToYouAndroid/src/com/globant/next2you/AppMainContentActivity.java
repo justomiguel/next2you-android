@@ -1,5 +1,7 @@
 package com.globant.next2you;
 
+import java.util.ArrayList;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,20 +12,27 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.globant.next2you.fragments.AskRideScreen;
 import com.globant.next2you.fragments.FragmentMap;
+import com.globant.next2you.objects.Community;
 import com.globant.next2you.util.UIUtils;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 
@@ -32,6 +41,7 @@ public class AppMainContentActivity extends FragmentActivity {
 	public static final String UPDATE_COMMUNITY = "current_community";
 	private SlidingMenu slidingMenu;
 	private BroadcastReceiver receiver;
+	private AskRideScreen askRideScreen;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +57,35 @@ public class AppMainContentActivity extends FragmentActivity {
 			}
 		};
 		registerReceiver(receiver , new IntentFilter(UPDATE_COMMUNITY));
+		
+		// detect swipe on header view
+//		final GestureDetector gestureDetector = new GestureDetector(this, new MyGestureDetector());
+//        OnTouchListener gestureListener = new View.OnTouchListener() {
+//            public boolean onTouch(View v, MotionEvent event) {
+//                return gestureDetector.onTouchEvent(event);
+//            }
+//        };
+//        findViewById(R.id.logo).setOnTouchListener(gestureListener);
+	}
+	
+	private void openCloseAskRideScreen(boolean checkToCloseOnly) {
+		boolean menuOpened = askRideScreen != null;
+		if(!menuOpened && checkToCloseOnly) {
+			return;
+		}
+		
+		findViewById(R.id.subtitle).setVisibility(menuOpened ? View.VISIBLE : View.GONE);
+		findViewById(R.id.pointer_ask_ride_screen).setVisibility(menuOpened ? View.GONE : View.VISIBLE);
+		if(menuOpened) {
+			askRideScreen.close();
+			askRideScreen = null;
+			openSection(0);
+		} else {
+			LinearLayout container = (LinearLayout) findViewById(R.id.container);
+			container.removeAllViews();
+			askRideScreen = new AskRideScreen(this);
+			askRideScreen.initialize(container);
+		}
 	}
 	
 	public void initAndOpenMapScreen() {
@@ -68,9 +107,20 @@ public class AppMainContentActivity extends FragmentActivity {
 		});
 
 		TextView subtitle = (TextView) findViewById(R.id.subtitle);
+		ArrayList<Community> communities = App.app().getAuth().getCommunities();
+		if (communities != null && communities.size() > 0) {
+			subtitle.setText(communities.get(0).getName());
+		}
 		UIUtils.prepareTextView(this, subtitle);
 
 		openSection(0);
+		
+		findViewById(R.id.message_icon).setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				openCloseAskRideScreen(false);
+			}
+		});
 	}
 
 	@Override
@@ -85,16 +135,26 @@ public class AppMainContentActivity extends FragmentActivity {
 	public void openSection(int idx) {
 		Log.d(TAG, "open section:" + idx);
 		Fragment fragment = null;
+		if(idx != 1) {
+			openCloseAskRideScreen(true);
+		}
 		switch (idx) {
 		case 0:
 			fragment = new FragmentMap();
 			findViewById(R.id.subtitle).setVisibility(View.VISIBLE);
 			break;
+		case 1:
+			openCloseAskRideScreen(false);
+			return;
 		case 3:
 			startActivity(new Intent(this, MyProfileActivity.class));
+			overridePendingTransition(R.anim.slide_out_animation,
+					R.anim.slide_in_animation);
 			return;
 		case 2:
 			startActivity(new Intent(this, ChangeCommunityScreen.class));
+			overridePendingTransition(R.anim.slide_out_animation,
+					R.anim.slide_in_animation);
 			return;
 		default:
 			break;
@@ -114,10 +174,14 @@ public class AppMainContentActivity extends FragmentActivity {
 				new OnClickListener() {
 					@Override
 					public void onClick(View v) {
-						slidingMenu.toggle(true);
-						toggleShadowOverlay();
+						toggleSlidingMenu();
 					}
 				});
+	}
+	
+	private void toggleSlidingMenu() {
+		slidingMenu.toggle(true);
+		toggleShadowOverlay();
 	}
 	
 	private void toggleShadowOverlay() {
@@ -160,6 +224,10 @@ public class AppMainContentActivity extends FragmentActivity {
 					toggleShadowOverlay();
 				} else if(pos == 2) {
 					openSection(2);
+					slidingMenu.toggle(true);
+					toggleShadowOverlay();
+				} else if(pos == 1) {
+					openSection(1);
 					slidingMenu.toggle(true);
 					toggleShadowOverlay();
 				}
@@ -216,4 +284,31 @@ public class AppMainContentActivity extends FragmentActivity {
 			return tv;
 		}
 	}
+	
+	
+	private class MyGestureDetector extends SimpleOnGestureListener {
+		private static final int SWIPE_MIN_DISTANCE = 120;
+	    private static final int SWIPE_MAX_OFF_PATH = 250;
+	    private static final int SWIPE_THRESHOLD_VELOCITY = 200;
+	    
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            try {
+                if (Math.abs(e1.getY() - e2.getY()) > SWIPE_MAX_OFF_PATH)
+                    return false;
+                if(e1.getX() - e2.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                }  else if (e2.getX() - e1.getX() > SWIPE_MIN_DISTANCE && Math.abs(velocityX) > SWIPE_THRESHOLD_VELOCITY) {
+                	toggleSlidingMenu();
+                }
+            } catch (Exception e) {
+            	Log.e(TAG, "", e);
+            }
+            return false;
+        }
+
+            @Override
+        public boolean onDown(MotionEvent e) {
+              return true;
+        }
+    }
 }

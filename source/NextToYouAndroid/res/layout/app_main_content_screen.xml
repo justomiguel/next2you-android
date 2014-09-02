@@ -16,6 +16,17 @@
         android:src="@drawable/next_to_you_logo_small" />
 
     <ImageView
+        android:id="@+id/pointer_ask_ride_screen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:scaleType="center"
+        android:visibility="gone"
+        android:src="@drawable/pointer"
+        android:layout_marginRight="20dp"
+        android:layout_alignBottom="@id/logo" />
+    
+    <ImageView
         android:id="@+id/sliding_menu_toggle"
         android:layout_width="wrap_content"
         android:layout_height="@dimen/login_screen_header_height"
@@ -32,10 +43,12 @@
         android:layout_width="wrap_content"
         android:layout_height="@dimen/login_screen_header_height"
         android:layout_alignParentRight="true"
-        android:layout_marginRight="20dp"
+        android:layout_marginRight="10dp"
         android:contentDescription="@string/messages"
         android:scaleType="center"
+        android:clickable="true"
         android:paddingTop="3dp"
+        android:paddingRight="10dp"
         android:src="@drawable/notification_button" />
 
     <ImageView
@@ -83,6 +96,6 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:background="#77000000" />
+        android:background="@color/shadow" />
 
 </RelativeLayout>

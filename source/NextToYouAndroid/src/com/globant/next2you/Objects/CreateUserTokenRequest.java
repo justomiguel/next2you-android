@@ -6,6 +6,7 @@ public class CreateUserTokenRequest {
 	private String password;
 
 	public CreateUserTokenRequest() {
+		
 	}
 
 	public CreateUserTokenRequest(String username, String password) {

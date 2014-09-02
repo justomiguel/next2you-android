@@ -6,12 +6,17 @@
     <color name="login_background">#edebe7</color>
     <color name="purple">#693690</color>
     <color name="marker_radius_purple">#33693690</color>
+    <color name="marker_radius_green">#333ac447</color>
+    <color name="marker_radius_red">#33eb5353</color>
+    
     <color name="grapefruit">#f8587d</color>
     <color name="grapefruit_focus">#bf2548</color>
     <color name="destinations_divider">#f34870</color>
     <color name="light_purple_hint">#9e7eb3</color>
 	<color name="notification_dialog_background">#edebe7</color>
-		
+
+	<color name="shadow">#77000000</color>
+			
 	<!-- clusters -->
 	<color name="red_marker">#eb5353</color>
 	<color name="green_marker">#3ac447</color>

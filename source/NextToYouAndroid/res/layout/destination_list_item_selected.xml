@@ -3,21 +3,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/login_background"
+    android:paddingTop="@dimen/login_screen_header_height"
     android:paddingBottom="20dp" >
-
-    <include
-        android:id="@+id/header"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        layout="@layout/destination_list_item" />
 
     <TextView
         android:id="@+id/lbl"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/header"
-        android:layout_centerInParent="true"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
         android:gravity="center"
         android:padding="20dp"
         android:text="@string/from"
@@ -36,20 +30,7 @@
         android:paddingRight="20dp"
         android:weightSum="13" >
 
-        <ImageView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="4"
-            android:contentDescription="@string/arrow_up"
-            android:scaleType="center"
-            android:src="@drawable/grey_arrow_up" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        <ImageView
+         <ImageView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="4"
@@ -60,10 +41,26 @@
         <ImageView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:scaleType="center"
+            android:visibility="invisible"
+            android:src="@drawable/grey_arrow_up" />
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:layout_weight="4"
             android:contentDescription="@string/arrow_up"
             android:scaleType="center"
             android:src="@drawable/grey_arrow_up" />
+
+        <ImageView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:contentDescription="@string/arrow_up"
+            android:scaleType="center"
+            android:src="@drawable/grey_arrow_up" /> 
+       
     </LinearLayout>
 
     <LinearLayout
@@ -127,9 +124,10 @@
             android:scaleType="center"
             android:src="@drawable/grey_arrow_down" />
 
-        <View
+        <ImageView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:visibility="invisible"
             android:layout_weight="1" />
 
         <ImageView

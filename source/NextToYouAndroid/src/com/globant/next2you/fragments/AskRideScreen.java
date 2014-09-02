@@ -24,12 +24,16 @@ import android.widget.TextView;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.globant.next2you.App;
+import com.globant.next2you.App.State;
 import com.globant.next2you.R;
 import com.globant.next2you.async.UICallback;
 import com.globant.next2you.net.ApiServices;
+import com.globant.next2you.objects.Destination;
 import com.globant.next2you.objects.Person;
 import com.globant.next2you.objects.RetrievePendingTravelsResponse;
 import com.globant.next2you.objects.Travel;
+import com.globant.next2you.objects.TravelPerson;
+import com.globant.next2you.objects.TravelPersonResponse;
 import com.globant.next2you.util.UIUtils;
 
 public class AskRideScreen {
@@ -37,7 +41,10 @@ public class AskRideScreen {
 	private static final String TAG = "AskRideScreen";
 	private WeakReference<Context> ctx;
 	private View offerDialogView;
-	private View holder;
+	private LinearLayout holder;
+	private boolean pendingTravelsActive = false;
+	private static final double DELTA_LOC_MAX_DIFF = 0.00001;
+	private static final double MIN_TIME_INTERVAL_DIFF = 1000 * 60 * 30;
 
 	public AskRideScreen(Context ctx) {
 		this.ctx = new WeakReference<Context>(ctx);
@@ -48,20 +55,16 @@ public class AskRideScreen {
 	}
 
 	public void close() {
-		final LinearLayout dialogHolder = (LinearLayout) holder
-				.findViewById(R.id.dialog_holder);
-		dialogHolder.removeView(offerDialogView);
-		dialogHolder.setVisibility(View.GONE);
+		holder.removeAllViews();
+		holder.setBackgroundColor(Color.WHITE);
 	}
 
 	@SuppressLint("InflateParams")
-	public void initialize(View holder) {
-		this.holder = holder;
+	public void initialize(LinearLayout dialogHolder) {
+		this.holder = dialogHolder;
 		final Context ctx = getContext();
 		LayoutInflater inflater = LayoutInflater.from(ctx);
-		final LinearLayout dialogHolder = (LinearLayout) holder
-				.findViewById(R.id.dialog_holder);
-		dialogHolder.removeAllViews();
+		dialogHolder.setBackgroundColor(Color.BLACK);
 		offerDialogView = inflater.inflate(R.layout.ask_ride_screen,
 				dialogHolder);
 
@@ -93,10 +96,13 @@ public class AskRideScreen {
 				if (v == pending) {
 					pending.setTextColor(activeColor);
 					offers.setTextColor(inactiveColor);
+					pendingTravelsActive = true;
 				} else {
 					pending.setTextColor(inactiveColor);
 					offers.setTextColor(activeColor);
+					pendingTravelsActive = false;
 				}
+				loadPeople();
 			}
 		};
 		pending.setOnClickListener(tabToggle);
@@ -105,62 +111,146 @@ public class AskRideScreen {
 		loadPeople();
 		// dialogHolder.addView(offerDialogView);
 		dialogHolder.setVisibility(View.VISIBLE);
+		dialogHolder.bringChildToFront(offerDialogView);
 
 	}
 
 	private void loadPeople() {
-		App.getTaskManager().assignNet(new Callable<Object>() {
+		if (App.app().userState == State.NONE) {
+			Log.w(TAG, "user state is NONE skip tabs reloading");
+			return;
+		}
+		if (pendingTravelsActive) {
+			App.getTaskManager().assignNet(new Callable<Object>() {
 
-			@Override
-			public Object call() throws Exception {
-				String currentToken = App.app().getAuth().getToken();
-				RetrievePendingTravelsResponse pendingTravels = ApiServices.retrievePendingTravels(currentToken);
-				ArrayList<Travel> travels = pendingTravels != null ? pendingTravels
-						.getTravels() : null;
-				if (travels != null) {
-					Log.d(TAG, "pendingTravels:" + travels.size());
-				}
-				if (travels == null || travels.size() == 0) {
-					Log.d(TAG, "simulate response");
-					InputStream reader = null;
-					try {
-						reader = getContext().getResources().openRawResource(
-								R.raw.travels_mock);
-						byte[] buff = new byte[1024];
-						int n;
-						StringBuilder sb = new StringBuilder();
-						while ((n = reader.read(buff)) != -1) {
-							sb.append(new String(buff, 0, n));
-						}
-						return new ObjectMapper().readValue(sb.toString(),
-								RetrievePendingTravelsResponse.class)
-								.getTravels();
-					} catch (Exception e) {
-						Log.e(TAG, "", e);
-					} finally {
-						if (reader != null) {
-							reader.close();
+				@Override
+				public Object call() throws Exception {
+					String currentToken = App.app().getAuth().getToken();
+					RetrievePendingTravelsResponse pendingTravels = ApiServices.retrievePendingTravels(currentToken);
+					ArrayList<Travel> travels = pendingTravels != null ? pendingTravels
+							.getTravels() : null;
+					if (travels != null) {
+						Log.d(TAG, "pendingTravels:" + travels.size());
+					}
+					if (travels == null || travels.size() == 0) {
+						Log.d(TAG, "simulate response");
+						InputStream reader = null;
+						try {
+							reader = getContext().getResources()
+									.openRawResource(R.raw.travels_mock);
+							byte[] buff = new byte[1024];
+							int n;
+							StringBuilder sb = new StringBuilder();
+							while ((n = reader.read(buff)) != -1) {
+								sb.append(new String(buff, 0, n));
+							}
+							return new ObjectMapper().readValue(sb.toString(),
+									RetrievePendingTravelsResponse.class)
+									.getTravels();
+						} catch (Exception e) {
+							Log.e(TAG, "", e);
+						} finally {
+							if (reader != null) {
+								reader.close();
+							}
 						}
 					}
+					return pendingTravels.getTravels();
 				}
-				return pendingTravels.getTravels();
-			}
-		}, new UICallback() {
-			@Override
-			public void onResult(Object result) {
-				ArrayList<Travel> travels = (ArrayList<Travel>) result;
-				ListView ridesList = (ListView) offerDialogView
-						.findViewById(R.id.rides_list);
-				ridesList.setAdapter(new RidesAdapter(travels));
-			}
-		});
+			}, new UICallback() {
+				@Override
+				public void onResult(Object result) {
+					ArrayList<Travel> travels = (ArrayList<Travel>) result;
+					ListView ridesList = (ListView) offerDialogView
+							.findViewById(R.id.rides_list);
+					ridesList.setAdapter(new RidesAdapter(travels));
+				}
+			});
+		} else {
+			App.getTaskManager().assignNet(new Callable<Object>() {
+				@Override
+				public Object call() throws Exception {
+					TravelPersonResponse response = ApiServices.listSimpleTravels(App
+							.app().getAuth().getToken());
+					return response;
+				}
+			}, new UICallback() {
+
+				@Override
+				public void onResult(Object result) {
+					if (result == null) {
+						return;
+					}
+					TravelPersonResponse tpr = (TravelPersonResponse) result;
+					ListView ridesList = (ListView) offerDialogView
+							.findViewById(R.id.rides_list);
+					ArrayList<TravelPerson> travels = tpr.getTravels();
+					travels = filterTravels(travels);
+					ridesList.setAdapter(new RidesAdapter(travels));
+				}
+			});
+		}
 	}
 
-	private static class RidesAdapter extends BaseAdapter {
-		private ArrayList<Travel> travels;
-		private HashMap<Long, Person> personCache;
+	private ArrayList<TravelPerson> filterTravels(
+			ArrayList<TravelPerson> listToFilter) {
+		ArrayList<TravelPerson> filteredList = new ArrayList<TravelPerson>();
 		
-		public RidesAdapter(ArrayList<Travel> travels) {
+		for (TravelPerson tp : listToFilter) {
+			App app = App.app();
+			// Remove the owner travels
+			if (tp.isOwner()) {
+				Log.d(TAG, "filter travel is OWNER " + tp);
+				continue;
+			}
+
+			// Remove unrelated travels to the current users's state
+			State state = app.userState;
+			if (state.equals(State.ASK)) {
+				if (tp.isHasCar()) {
+					Log.d(TAG, "filter travel state=ASK but has car true " + tp);
+					continue;
+				}
+			} else {
+				if (!tp.isHasCar()) {
+					Log.d(TAG, "filter travel state=OFFER but has car false "
+							+ tp);
+					continue;
+				}
+			}
+
+			// Remove all travels with destination different from ours
+			Destination curDest = app.currentDestination;
+			if (tp.getFromLatitude() > 0
+					&& tp.getFromLongitude() > 0
+					&& tp.getToLatitude() > 0
+					&& tp.getToLongitude() > 0
+					&& Math.abs(tp.getToLatitude() - curDest.getLatitude()) > DELTA_LOC_MAX_DIFF
+					&& Math.abs(tp.getToLongitude() - curDest.getLongitude()) > DELTA_LOC_MAX_DIFF) {
+				Log.d(TAG, "filter travel because of location coordinate " + tp);
+				continue;
+			}
+			if (tp.getToLocation() != null && tp.getToLocation().length() > 0
+					&& app.currentDestination != null
+					&& app.currentDestination.getAddress() != null
+					&& app.currentDestination.getAddress().length() > 0) {
+				if (!app.currentDestination.getAddress().equals(
+						tp.getToLocation())) {
+					Log.d(TAG, "filter travel because of location name " + tp);
+					continue;
+				}
+			}
+
+			filteredList.add(tp);
+		}
+		return filteredList;
+	}
+
+	private class RidesAdapter extends BaseAdapter {
+		private ArrayList<?> travels;
+		private HashMap<Long, Person> personCache;
+
+		public RidesAdapter(ArrayList<?> travels) {
 			this.travels = travels;
 			personCache = new HashMap<Long, Person>();
 		}
@@ -203,8 +293,37 @@ public class AskRideScreen {
 			avatar.setTag(position);
 			Button ignoreRequest = (Button) holder
 					.findViewById(R.id.ignore_request);
+			ignoreRequest.setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					App.getTaskManager().assignNet(new Callable<Object>() {
+						@Override
+						public Object call() throws Exception {
+							int travelPersonId = 0;
+							String token = App.app().getAuth().getToken();
+							ApiServices.approveOrRejectForTravel(token, travelPersonId, false);
+							return null;
+						}
+					});
+				}
+			});
 			Button doOfferRide = (Button) holder.findViewById(R.id.offer_ride);
-
+			doOfferRide.setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					App.getTaskManager().assignNet(new Callable<Object>() {
+						@Override
+						public Object call() throws Exception {
+							int travelPersonId = 0;
+							String token = App.app().getAuth().getToken();
+							ApiServices.approveOrRejectForTravel(token, travelPersonId, true);
+							return null;
+						}
+					});
+				}
+			});
 			if (convertView == null) {
 				UIUtils.prepareTextView(ctx, timeLabel);
 				UIUtils.prepareTextView(ctx, userNameLabel);
@@ -217,13 +336,24 @@ public class AskRideScreen {
 			userDescrLabel.setText("wants to travel with you");
 			spanLabel.setText("from 16 hs.");
 
+			if (pendingTravelsActive) {
+				loadPersonForPendingTravelsTab(position, userNameLabel, avatar);
+			} else {
+
+			}
+
+			return holder;
+		}
+
+		private void loadPersonForPendingTravelsTab(final int position,
+				final TextView userNameLabel, final ImageView avatar) {
 			App.getTaskManager().assignNet(new Callable<Object>() {
 				@Override
 				public Object call() throws Exception {
 					Person person = null;
 					Travel travel = (Travel) getItem(position);
 					person = personCache.get(travel.getPersonIdToBeApproved());
-					if(person != null) {
+					if (person != null) {
 						return person;
 					}
 					String token = App.app().getAuth().getToken();
@@ -249,8 +379,6 @@ public class AskRideScreen {
 					}
 				}
 			});
-
-			return holder;
 		}
 
 	}

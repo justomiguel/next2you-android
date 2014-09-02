@@ -31,6 +31,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 
 import com.globant.next2you.App;
+import com.globant.next2you.App.State;
 import com.globant.next2you.GPSCollectorService;
 import com.globant.next2you.R;
 import com.globant.next2you.async.UICallback;
@@ -129,6 +130,8 @@ public class FragmentMap extends BaseFragment implements
 		FragmentTransaction transaction = getChildFragmentManager()
 				.beginTransaction();
 		transaction.add(R.id.fragment_map_root, mapFragment).commit();
+		UIUtils.prepareTextView(getActivity(),
+				(Button) rootView.findViewById(R.id.map_main_btn));
 
 		return rootView;
 	}
@@ -166,19 +169,27 @@ public class FragmentMap extends BaseFragment implements
 		GPSCollectorService.call(getActivity());
 	}
 
-	
 	public void drawCircle(LatLng center, int radius) {
 		Resources res = getActivity().getResources();
+		int color = Color.WHITE;
+		State state = App.app().userState;
+		if(state.equals(State.NONE)) {
+			color = res.getColor(R.color.marker_radius_purple);
+		} else if(state.equals(State.ASK)) {
+			color = res.getColor(R.color.marker_radius_green);
+		} else if(state.equals(State.OFFER)) {
+			color = res.getColor(R.color.marker_radius_red);
+		}
 		CircleOptions circleOptions = new CircleOptions()
 				.center(new LatLng(center.latitude, center.longitude))
 				.radius(radius).strokeColor(Color.TRANSPARENT)
-				.fillColor(res.getColor(R.color.marker_radius_purple));
+				.fillColor(color);
 		removeCircle();
 		circle = map.addCircle(circleOptions);
 	}
-	
+
 	public void removeCircle() {
-		if(circle != null) {
+		if (circle != null) {
 			circle.remove();
 		}
 	}
@@ -190,7 +201,8 @@ public class FragmentMap extends BaseFragment implements
 
 	// *************** Clusters ******************
 	private ClusterManager<Person> clusterManager;
-	//private Random mRandom = new Random(1984);
+
+	// private Random mRandom = new Random(1984);
 
 	/**
 	 * Draws profile photos inside markers (using IconGenerator). When there are
@@ -206,20 +218,29 @@ public class FragmentMap extends BaseFragment implements
 		@Override
 		protected void onBeforeClusterItemRendered(Person person,
 				MarkerOptions markerOptions) {
-			if(!isAdded()) {
+			if (!isAdded()) {
 				return;
 			}
 			if (person instanceof Me) {
+				int myPosIconId = R.drawable.marker_my_position;
+				State state = App.app().userState;
+				if(state.equals(State.ASK)) {
+					myPosIconId = R.drawable.marker_my_position_green;
+				} else if(state.equals(State.OFFER)) {
+					myPosIconId = R.drawable.marker_my_position_red;
+				}
 				Bitmap icon = BitmapFactory.decodeResource(getResources(),
-						R.drawable.marker_my_position);
+						myPosIconId);
 				markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon))
 						.title(person.getAddress());
-				
+
 				Resources res = getActivity().getResources();
-				int radius = (int) res.getDimension(R.dimen.map_my_location_radius);
-				LatLng pos = new LatLng(person.getPosition().latitude, person.getPosition().longitude);
+				int radius = (int) res
+						.getDimension(R.dimen.map_my_location_radius);
+				LatLng pos = new LatLng(person.getPosition().latitude,
+						person.getPosition().longitude);
 				drawCircle(pos, radius);
-				
+
 			} else {
 				int icId = 0;
 				if (person.getHasCar() && person.getHasActiveTravel()) {
@@ -257,8 +278,23 @@ public class FragmentMap extends BaseFragment implements
 				}
 			}
 
-			Bitmap me = type5 > 0 ? createMarker(R.drawable.marker_my_position,
-					type5, R.color.purple) : null;
+			int myPosIconId = R.drawable.marker_my_position;
+			int circleColor = Color.WHITE;
+			State state = App.app().userState;
+			if(state.equals(State.ASK)) {
+				myPosIconId = R.drawable.marker_my_position_green;
+			} else if(state.equals(State.OFFER)) {
+				myPosIconId = R.drawable.marker_my_position_red;
+			}
+			if(state.equals(State.NONE)) {
+				circleColor = R.color.purple;
+			} else if(state.equals(State.ASK)) {
+				circleColor = R.color.green_marker;
+			} else if(state.equals(State.OFFER)) {
+				circleColor = R.color.red_marker;
+			}
+			Bitmap me = type5 > 0 ? createMarker(myPosIconId,
+					type5, circleColor) : null;
 			Bitmap type1Bitmap = type1 > 0 ? createMarker(R.drawable.car,
 					type1, R.color.red_marker) : null;
 			Bitmap type2Bitmap = type2 > 0 ? createMarker(R.drawable.black_car,
@@ -345,7 +381,7 @@ public class FragmentMap extends BaseFragment implements
 		@Override
 		protected void onBeforeClusterRendered(Cluster<Person> cluster,
 				MarkerOptions markerOptions) {
-			if(!isAdded()) {
+			if (!isAdded()) {
 				return;
 			}
 			Bitmap compositeMarker = getCompositeBitmap(cluster.getItems());
@@ -406,7 +442,9 @@ public class FragmentMap extends BaseFragment implements
 							new GridBasedAlgorithm<Person>()));
 		}
 
-		addItems(lat, lon, people2);
+		if(lat != Float.NaN && lon != Float.NaN) {
+			addItems(lat, lon, people2);
+		}
 		clusterManager.cluster();
 	}
 
@@ -520,7 +558,11 @@ public class FragmentMap extends BaseFragment implements
 	private boolean cameraMovedInitially = false;
 
 	private void loadPeople(final double lat, final double lon) {
-		if(!isAdded()) {
+		if((lat == Float.NaN || lon == Float.NaN) && clusterManager != null) {
+			clusterManager.cluster();
+			return;
+		}
+		if (!isAdded()) {
 			return;
 		}
 		if (!cameraMovedInitially) {
@@ -530,10 +572,11 @@ public class FragmentMap extends BaseFragment implements
 		}
 		VisibleRegion region = map.getProjection().getVisibleRegion();
 		final LatLngBounds bounds = region.latLngBounds;
+		App.app().mapBounds = bounds;
 		App.getTaskManager().assignNet(new Callable<Object>() {
 			@Override
 			public Object call() throws Exception {
-				if(!isAdded()) {
+				if (!isAdded()) {
 					return null;
 				}
 				CreateUserTokenResponse auth = App.app().getAuth();
@@ -546,13 +589,13 @@ public class FragmentMap extends BaseFragment implements
 
 			@Override
 			public void onResult(Object result) {
-				if(result == null || !isAdded()) {
+				if (result == null || !isAdded()) {
 					return;
 				}
 				@SuppressWarnings("unchecked")
 				List<Person> list = (List<Person>) result;
 				list.add(new Me(new LatLng(lat, lon)));
-				//log("result:" + list);
+				// log("result:" + list);
 				removeCircle();
 				addMarkers(lat, lon, list);
 			}

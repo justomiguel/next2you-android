@@ -28,12 +28,20 @@
         android:scaleType="center"
         android:src="@drawable/icon_back" />
 
+    <include
+        android:id="@+id/view_dialog"
+        android:layout_width="match_parent"
+        android:layout_below="@id/screen_title"
+        android:layout_height="match_parent"
+        layout="@layout/destination_list_item_selected" />
+    
     <ListView
         android:id="@+id/destinations_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
+        android:background="@color/shadow"
         android:layout_below="@id/screen_title"
         android:divider="@color/destinations_divider"
         android:dividerHeight="1dp" >
@@ -46,8 +54,9 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_below="@id/screen_title"
-        android:visibility="gone"
         android:background="#88000000"
-        android:orientation="vertical" />
+        android:clickable="false"
+        android:orientation="vertical"
+        android:visibility="gone" />
 
 </RelativeLayout>

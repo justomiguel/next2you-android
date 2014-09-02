@@ -40,15 +40,13 @@
         </RelativeLayout>
 
         <!-- locations -->
+
         <ListView
             android:id="@+id/community_list"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_below="@id/header"
-            android:background="@color/grapefruit" >
+            android:layout_height="500dp"
+            android:layout_below="@id/header" >
         </ListView>
-
-        
     </RelativeLayout>
 
 </ScrollView>
