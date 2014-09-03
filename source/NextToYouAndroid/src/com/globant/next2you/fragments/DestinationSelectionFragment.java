@@ -44,6 +44,7 @@ import com.globant.next2you.App.State;
 import com.globant.next2you.AppMainContentActivity;
 import com.globant.next2you.GPSCollectorService;
 import com.globant.next2you.R;
+import com.globant.next2you.async.Callback;
 import com.globant.next2you.async.UICallback;
 import com.globant.next2you.kankan.wheel.widget.OnWheelChangedListener;
 import com.globant.next2you.kankan.wheel.widget.WheelView;
@@ -303,74 +304,82 @@ public class DestinationSelectionFragment extends BaseFragment {
 									bounds.southwest.latitude,
 									bounds.southwest.longitude, true,
 									totalInterval);
-							ApiServices.createTravel(App.app().getAuth()
+							return ApiServices.createTravel(App.app().getAuth()
 									.getToken(), request);
-							return null;
+						}
+					}, new UICallback() {
+						
+						@Override
+						public void onResult(Object result) {
+							CreateTravelResponse createTravelResponse = (CreateTravelResponse) result;
+							App.app().userState = State.OFFER;
+							App.app().setCurrentTravelId(createTravelResponse.getTravelId());
+
+							LayoutInflater inflater = LayoutInflater.from(ctx);
+							final LinearLayout dialogHolder = (LinearLayout) holder
+									.findViewById(R.id.dialog_holder);
+							dialogHolder.removeAllViews();
+							final View offerDialogView = inflater.inflate(
+									R.layout.offer_ride_dialog, dialogHolder);
+
+							// setup views
+							TextView personsCountField = (TextView) offerDialogView
+									.findViewById(R.id.notification_text_2);
+							personsCountField.setText(String.format(
+									Locale.US,
+									ctx.getResources().getString(
+											R.string.offer_ride_persons), 20));
+							UIUtils.prepareTextView(ctx, personsCountField);
+
+							TextView titleLine1 = (TextView) offerDialogView
+									.findViewById(R.id.notification_text);
+							TextView titleLine3 = (TextView) offerDialogView
+									.findViewById(R.id.notification_text_3);
+							UIUtils.prepareTextView(ctx, titleLine1);
+							UIUtils.prepareTextView(ctx, titleLine3);
+
+							// dialogHolder.addView(offerDialogView);
+							dialogHolder.setVisibility(View.VISIBLE);
+
+							TextView ribbonText = (TextView) offerDialogView
+									.findViewById(R.id.ribbon_text);
+							UIUtils.prepareTextView(ctx, ribbonText);
+							String format = ctx
+									.getString(R.string.offer_ride_travels_completed);
+							String formatted = String.format(Locale.US, format, 15);
+							ribbonText.setText(Html.fromHtml(formatted));
+
+							TextView congratsTxt = (TextView) offerDialogView
+									.findViewById(R.id.contgrats_improve);
+							UIUtils.prepareTextView(ctx, congratsTxt);
+
+							offerDialogView.findViewById(R.id.close_notification)
+									.setOnClickListener(new OnClickListener() {
+										@Override
+										public void onClick(View v) {
+											dialogHolder.removeView(offerDialogView);
+											dialogHolder.setVisibility(View.GONE);
+										}
+									});
+
+							offerDialogView.findViewById(R.id.share_fb_btn)
+									.setOnClickListener(new OnClickListener() {
+										@Override
+										public void onClick(View v) {
+											shareToFbWall(ctx);
+										}
+									});
+
+							offerDialogView.findViewById(R.id.share_twitter_btn)
+									.setOnClickListener(new OnClickListener() {
+										@Override
+										public void onClick(View v) {
+											postTweet(ctx);
+										}
+									});
 						}
 					});
 
-					LayoutInflater inflater = LayoutInflater.from(ctx);
-					final LinearLayout dialogHolder = (LinearLayout) holder
-							.findViewById(R.id.dialog_holder);
-					dialogHolder.removeAllViews();
-					final View offerDialogView = inflater.inflate(
-							R.layout.offer_ride_dialog, dialogHolder);
-
-					// setup views
-					TextView personsCountField = (TextView) offerDialogView
-							.findViewById(R.id.notification_text_2);
-					personsCountField.setText(String.format(
-							Locale.US,
-							ctx.getResources().getString(
-									R.string.offer_ride_persons), 20));
-					UIUtils.prepareTextView(ctx, personsCountField);
-
-					TextView titleLine1 = (TextView) offerDialogView
-							.findViewById(R.id.notification_text);
-					TextView titleLine3 = (TextView) offerDialogView
-							.findViewById(R.id.notification_text_3);
-					UIUtils.prepareTextView(ctx, titleLine1);
-					UIUtils.prepareTextView(ctx, titleLine3);
-
-					// dialogHolder.addView(offerDialogView);
-					dialogHolder.setVisibility(View.VISIBLE);
-
-					TextView ribbonText = (TextView) offerDialogView
-							.findViewById(R.id.ribbon_text);
-					UIUtils.prepareTextView(ctx, ribbonText);
-					String format = ctx
-							.getString(R.string.offer_ride_travels_completed);
-					String formatted = String.format(Locale.US, format, 15);
-					ribbonText.setText(Html.fromHtml(formatted));
-
-					TextView congratsTxt = (TextView) offerDialogView
-							.findViewById(R.id.contgrats_improve);
-					UIUtils.prepareTextView(ctx, congratsTxt);
-
-					offerDialogView.findViewById(R.id.close_notification)
-							.setOnClickListener(new OnClickListener() {
-								@Override
-								public void onClick(View v) {
-									dialogHolder.removeView(offerDialogView);
-									dialogHolder.setVisibility(View.GONE);
-								}
-							});
-
-					offerDialogView.findViewById(R.id.share_fb_btn)
-							.setOnClickListener(new OnClickListener() {
-								@Override
-								public void onClick(View v) {
-									shareToFbWall(ctx);
-								}
-							});
-
-					offerDialogView.findViewById(R.id.share_twitter_btn)
-							.setOnClickListener(new OnClickListener() {
-								@Override
-								public void onClick(View v) {
-									postTweet(ctx);
-								}
-							});
 				}
 			});
 
@@ -408,7 +417,7 @@ public class DestinationSelectionFragment extends BaseFragment {
 									bounds.northeast.latitude,
 									bounds.northeast.longitude,
 									toLongitude,
-									toLatitude, true,
+									toLatitude, false,
 									totalInterval);
 							CreateTravelResponse createTravelResponse = ApiServices
 									.createTravel(App.app().getAuth()
