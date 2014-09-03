@@ -3,6 +3,7 @@ package com.globant.next2you.fragments;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
@@ -514,6 +515,9 @@ public class DestinationSelectionFragment extends BaseFragment {
 				});
 				return null;
 			}
+			
+			App.app().travelDateRequested = new Date(c.getTimeInMillis());
+			
 			return totalInterval;
 		}
 

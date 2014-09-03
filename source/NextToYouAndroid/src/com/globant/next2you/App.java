@@ -1,5 +1,7 @@
 package com.globant.next2you;
 
+import java.util.Date;
+
 import android.app.Application;
 import android.content.Context;
 import android.widget.ImageView;
@@ -31,6 +33,7 @@ public class App extends Application {
 	
 	public State userState = State.NONE;
 	public Destination currentDestination = null;
+	public Date travelDateRequested;
 	
 	public enum State {
 		NONE, ASK, OFFER

@@ -2,8 +2,13 @@ package com.globant.next2you.fragments;
 
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 
 import android.annotation.SuppressLint;
@@ -32,7 +37,6 @@ import com.globant.next2you.objects.Destination;
 import com.globant.next2you.objects.Person;
 import com.globant.next2you.objects.RetrievePendingTravelsResponse;
 import com.globant.next2you.objects.Travel;
-import com.globant.next2you.objects.TravelPerson;
 import com.globant.next2you.objects.TravelPersonResponse;
 import com.globant.next2you.util.UIUtils;
 
@@ -43,8 +47,12 @@ public class AskRideScreen {
 	private View offerDialogView;
 	private LinearLayout holder;
 	private boolean pendingTravelsActive = false;
+	private ArrayList<Travel> offeringTravels = new ArrayList<Travel>();
+	private ArrayList<Travel> pendingTravels = new ArrayList<Travel>();
 	private static final double DELTA_LOC_MAX_DIFF = 0.00001;
 	private static final double MIN_TIME_INTERVAL_DIFF = 1000 * 60 * 30;
+
+	private SimpleDateFormat formatterParser;
 
 	public AskRideScreen(Context ctx) {
 		this.ctx = new WeakReference<Context>(ctx);
@@ -62,6 +70,9 @@ public class AskRideScreen {
 	@SuppressLint("InflateParams")
 	public void initialize(LinearLayout dialogHolder) {
 		this.holder = dialogHolder;
+		formatterParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+		formatterParser.setTimeZone(TimeZone.getTimeZone("UTC"));
+		
 		final Context ctx = getContext();
 		LayoutInflater inflater = LayoutInflater.from(ctx);
 		dialogHolder.setBackgroundColor(Color.BLACK);
@@ -132,38 +143,15 @@ public class AskRideScreen {
 					if (travels != null) {
 						Log.d(TAG, "pendingTravels:" + travels.size());
 					}
-					if (travels == null || travels.size() == 0) {
-						Log.d(TAG, "simulate response");
-						InputStream reader = null;
-						try {
-							reader = getContext().getResources()
-									.openRawResource(R.raw.travels_mock);
-							byte[] buff = new byte[1024];
-							int n;
-							StringBuilder sb = new StringBuilder();
-							while ((n = reader.read(buff)) != -1) {
-								sb.append(new String(buff, 0, n));
-							}
-							return new ObjectMapper().readValue(sb.toString(),
-									RetrievePendingTravelsResponse.class)
-									.getTravels();
-						} catch (Exception e) {
-							Log.e(TAG, "", e);
-						} finally {
-							if (reader != null) {
-								reader.close();
-							}
-						}
-					}
 					return pendingTravels.getTravels();
 				}
 			}, new UICallback() {
 				@Override
 				public void onResult(Object result) {
-					ArrayList<Travel> travels = (ArrayList<Travel>) result;
+					pendingTravels = (ArrayList<Travel>) result;
 					ListView ridesList = (ListView) offerDialogView
 							.findViewById(R.id.rides_list);
-					ridesList.setAdapter(new RidesAdapter(travels));
+					ridesList.setAdapter(new RidesAdapter(pendingTravels));
 				}
 			});
 		} else {
@@ -184,20 +172,30 @@ public class AskRideScreen {
 					TravelPersonResponse tpr = (TravelPersonResponse) result;
 					ListView ridesList = (ListView) offerDialogView
 							.findViewById(R.id.rides_list);
-					ArrayList<TravelPerson> travels = tpr.getTravels();
-					travels = filterTravels(travels);
-					ridesList.setAdapter(new RidesAdapter(travels));
+					ArrayList<Travel> travels = tpr.getTravels();
+					offeringTravels = filterTravels(travels);
+					ridesList.setAdapter(new RidesAdapter(offeringTravels));
 				}
 			});
 		}
 	}
 
-	private ArrayList<TravelPerson> filterTravels(
-			ArrayList<TravelPerson> listToFilter) {
-		ArrayList<TravelPerson> filteredList = new ArrayList<TravelPerson>();
+	private ArrayList<Travel> filterTravels(
+			ArrayList<Travel> listToFilter) {
+		ArrayList<Travel> filteredList = new ArrayList<Travel>();
 		
-		for (TravelPerson tp : listToFilter) {
+		for (Travel tp : listToFilter) {
 			App app = App.app();
+			
+			// Remove pending travels from the offers array
+			for(Travel pendingTravel : pendingTravels) {
+				long otherPersonId = pendingTravel.getPersonIdToBeApproved();
+				//Remove pending travels with other person identifier equal to the travel offer person identifier
+				if(tp.getPersonId() == otherPersonId) {
+					continue;
+				}
+			}
+			
 			// Remove the owner travels
 			if (tp.isOwner()) {
 				Log.d(TAG, "filter travel is OWNER " + tp);
@@ -206,13 +204,15 @@ public class AskRideScreen {
 
 			// Remove unrelated travels to the current users's state
 			State state = app.userState;
-			if (state.equals(State.ASK)) {
+			if (state.equals(State.OFFER)) {
 				if (tp.isHasCar()) {
+					//If the current user offers travel remove other users travel offers
 					Log.d(TAG, "filter travel state=ASK but has car true " + tp);
 					continue;
 				}
 			} else {
 				if (!tp.isHasCar()) {
+					//If the current user searches for travel remove other users searches
 					Log.d(TAG, "filter travel state=OFFER but has car false "
 							+ tp);
 					continue;
@@ -230,15 +230,22 @@ public class AskRideScreen {
 				Log.d(TAG, "filter travel because of location coordinate " + tp);
 				continue;
 			}
-			if (tp.getToLocation() != null && tp.getToLocation().length() > 0
-					&& app.currentDestination != null
-					&& app.currentDestination.getAddress() != null
-					&& app.currentDestination.getAddress().length() > 0) {
-				if (!app.currentDestination.getAddress().equals(
-						tp.getToLocation())) {
-					Log.d(TAG, "filter travel because of location name " + tp);
-					continue;
+			
+			// Remove all travels with time span different from ours
+			if(tp.getStartTime() != null)
+			{
+				try {
+					Date travelStartTime = formatterParser.parse(tp.getStartTime());
+					long travelTimeStamp = travelStartTime.getTime();
+					long curTravelTimeStamp = app.travelDateRequested.getTime();
+					if(Math.abs(travelTimeStamp - curTravelTimeStamp) > MIN_TIME_INTERVAL_DIFF)
+					{
+						continue;
+					}
+				} catch (ParseException e) {
+					e.printStackTrace();
 				}
+				
 			}
 
 			filteredList.add(tp);
@@ -247,12 +254,14 @@ public class AskRideScreen {
 	}
 
 	private class RidesAdapter extends BaseAdapter {
-		private ArrayList<?> travels;
+		private ArrayList<Travel> travels;
 		private HashMap<Long, Person> personCache;
+		private SimpleDateFormat formatter;
 
-		public RidesAdapter(ArrayList<?> travels) {
+		public RidesAdapter(ArrayList<Travel> travels) {
 			this.travels = travels;
 			personCache = new HashMap<Long, Person>();
+			formatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
 		}
 
 		@Override
@@ -332,16 +341,24 @@ public class AskRideScreen {
 				UIUtils.prepareTextView(ctx, ignoreRequest);
 				UIUtils.prepareTextView(ctx, doOfferRide);
 			}
-			timeLabel.setText("11:25 am");
-			userDescrLabel.setText("wants to travel with you");
-			spanLabel.setText("from 16 hs.");
-
-			if (pendingTravelsActive) {
-				loadPersonForPendingTravelsTab(position, userNameLabel, avatar);
-			} else {
-
+			
+			Travel travel = travels.get(position);
+			
+			timeLabel.setText(formatter.format(new Date()));
+			if(travel.isHasCar()) {
+				userDescrLabel.setText("is offering ride");
+			}else {
+				userDescrLabel.setText("is searching for a ride");
 			}
-
+			spanLabel.setText("");
+			try {
+				spanLabel.setText("Travel starts at " + formatter.format(formatterParser.parse(travel.getStartTime())) + "hs");
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+	
+			loadPersonForPendingTravelsTab(position, userNameLabel, avatar);
+			
 			return holder;
 		}
 
@@ -352,14 +369,19 @@ public class AskRideScreen {
 				public Object call() throws Exception {
 					Person person = null;
 					Travel travel = (Travel) getItem(position);
-					person = personCache.get(travel.getPersonIdToBeApproved());
+					long personId = travel.getPersonIdToBeApproved();
+					if(personId == 0)
+					{
+						personId = travel.getPersonId();
+					}
+					person = personCache.get(personId);
 					if (person != null) {
 						return person;
 					}
 					String token = App.app().getAuth().getToken();
 					person = ApiServices.getPersonInfo(token,
-							travel.getPersonIdToBeApproved());
-					personCache.put(travel.getPersonIdToBeApproved(), person);
+							personId);
+					personCache.put(personId, person);
 					return person;
 				}
 			}, new UICallback() {

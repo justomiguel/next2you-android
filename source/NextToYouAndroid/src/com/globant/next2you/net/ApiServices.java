@@ -27,7 +27,7 @@ import com.globant.next2you.objects.RegisterUserRequest;
 import com.globant.next2you.objects.ResetCurrentUserPasswordRequest;
 import com.globant.next2you.objects.RetrieveApplicationVersionResponse;
 import com.globant.next2you.objects.RetrievePendingTravelsResponse;
-import com.globant.next2you.objects.TravelPerson;
+import com.globant.next2you.objects.Travel;
 import com.globant.next2you.objects.TravelPersonResponse;
 import com.globant.next2you.objects.UpdateUserTokenRequest;
 
