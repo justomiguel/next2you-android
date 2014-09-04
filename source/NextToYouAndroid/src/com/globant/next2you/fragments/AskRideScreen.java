@@ -311,9 +311,7 @@ public class AskRideScreen {
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
-	
 			loadPersonForPendingTravelsTab(position, userNameLabel, avatar, leftBtn, rightBtn);
-			
 			return holder;
 		}
 

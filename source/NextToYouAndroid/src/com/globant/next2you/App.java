@@ -3,6 +3,7 @@ package com.globant.next2you;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.Callable;
+import java.util.Date;
 
 import android.app.Application;
 import android.content.Context;
@@ -43,7 +44,7 @@ public class App extends Application {
 	public Destination currentDestination = null;
 	public Date travelDateRequested;
 	public ArrayList<Long> ignoreList = new ArrayList<Long>();
-	
+
 	public enum State {
 		NONE, ASK, OFFER
 	}
