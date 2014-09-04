@@ -27,7 +27,7 @@ import com.globant.next2you.objects.RegisterUserRequest;
 import com.globant.next2you.objects.ResetCurrentUserPasswordRequest;
 import com.globant.next2you.objects.RetrieveApplicationVersionResponse;
 import com.globant.next2you.objects.RetrievePendingTravelsResponse;
-import com.globant.next2you.objects.TravelPerson;
+import com.globant.next2you.objects.Travel;
 import com.globant.next2you.objects.TravelPersonResponse;
 import com.globant.next2you.objects.UpdateUserTokenRequest;
 
@@ -378,12 +378,14 @@ public class ApiServices {
 
 	public static boolean approveOrRejectForTravel(String token,
 			int travelPersonId, boolean approve) throws IOException {
+		Log.d(TAG, "approveOrRejectForTravel:" + approve);
 		HTTPQuery query = new HTTPQuery(API_URL + "travelPeople?travelPersonId");
 		query.addParam("travelPersonId", Integer.valueOf(travelPersonId)
 				.toString());
 		query.addParam("approve", Boolean.valueOf(approve).toString());
 
-		query.send("POST");
+		String res = query.send("POST");
+		Log.d(TAG, "res:" + res + ";code=" + query.getResponseStatusCode());
 		return query.getResponseStatusCode() == 201;
 
 	}

@@ -373,8 +373,12 @@ public class MyProfileActivity extends FragmentActivity {
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		ImageView avatarPic = (ImageView) findViewById(R.id.avatar);
-		if (lastPhoto == null) {
-			lastPhoto = ((BitmapDrawable) avatarPic.getDrawable()).getBitmap();
+		try {
+			if (lastPhoto == null) {
+				lastPhoto = ((BitmapDrawable) avatarPic.getDrawable()).getBitmap();
+			}
+		} catch (Exception e) {
+			Log.e(TAG, "", e);
 		}
 		scrollView.setScrollingEnabled(true);
 		try {
@@ -606,7 +610,9 @@ public class MyProfileActivity extends FragmentActivity {
 	// Multipart upload
 	public String multipartRequest(String urlTo, String post, Bitmap bitmap,
 			String filefield) throws ParseException, IOException {
-		Log.d(TAG, "upload to:" + urlTo);
+		//urlTo = "http://scooterlabs.com/echo";
+		Log.d(TAG, "upload to:" + urlTo + " with token " + App.app().getAuth()
+				.getToken());
 		HttpURLConnection connection = null;
 		DataOutputStream outputStream = null;
 		InputStream inputStream = null;
@@ -621,55 +627,37 @@ public class MyProfileActivity extends FragmentActivity {
 			URL url = new URL(urlTo);
 			connection = (HttpURLConnection) url.openConnection();
 
-			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Type",
-					"multipart/form-data; boundary=" + boundary);
+//			connection.setRequestProperty("Content-Type",
+//					"multipart/form-data; boundary=" + boundary);
 			connection.setRequestProperty("User-Agent",
 					"Next2You/1.0 (iPhone Simulator; iOS 7.1; Scale/2.00)");
-			connection
-					.setRequestProperty("Accept-Language",
-							"en;q=1, fr;q=0.9, de;q=0.8, zh-Hans;q=0.7, zh-Hant;q=0.6, ja;q=0.5");
 			connection.setRequestProperty("Authorization", App.app().getAuth()
 					.getToken());
+			connection.setRequestMethod("POST");
 			// Map<String, List<String>> headers = connection.getHeaderFields();
 			// for (String k : headers.keySet()) {
 			// Log.d(TAG, "name=" + k + " value=" + headers.get(k));
 			// }
 
-			connection.setDoInput(true);
 			connection.setDoOutput(true);
+			connection.setDoInput(true);
 			connection.setUseCaches(false);
 
-			outputStream = new DataOutputStream(connection.getOutputStream());
-			outputStream.writeBytes(twoHyphens + boundary + lineEnd);
-			outputStream.writeBytes("Content-Disposition: form-data; name=\""
-					+ filefield + "\"; filename=\"file.jpg\"" + lineEnd);
-			outputStream.writeBytes("Content-Type:image/jpeg" + lineEnd
+			StringBuilder sb = new StringBuilder();
+			sb.append(twoHyphens + boundary + lineEnd + "Content-Disposition: form-data; name=\""
+					+ filefield + "\"; filename=\"file.jpg\"" + lineEnd + "Content-Type:image/jpeg" + lineEnd
 					+ lineEnd);
+			outputStream = new DataOutputStream(connection.getOutputStream());
+			outputStream.writeBytes(sb.toString());
 			// outputStream.writeBytes("Content-Transfer-Encoding: binary"
 			// + lineEnd);
 
 			ByteArrayOutputStream stream = new ByteArrayOutputStream();
 			bitmap.compress(Bitmap.CompressFormat.PNG, 50, stream);
-			byte[] byteArray = stream.toByteArray();
+			byte[] byteArray = new byte[0];//stream.toByteArray();
 			outputStream.write(byteArray);
 
 			outputStream.writeBytes(lineEnd);
-
-			// // Upload POST Data
-			// String[] posts = post.split("&");
-			// int max = posts.length;
-			// for (int i = 0; i < max; i++) {
-			// outputStream.writeBytes(twoHyphens + boundary + lineEnd);
-			// String[] kv = posts[i].split("=");
-			// outputStream
-			// .writeBytes("Content-Disposition: form-data; name=\""
-			// + kv[0] + "\"" + lineEnd);
-			// outputStream.writeBytes("Content-Type: text/plain" + lineEnd);
-			// outputStream.writeBytes(lineEnd);
-			// outputStream.writeBytes(kv[1]);
-			// outputStream.writeBytes(lineEnd);
-			// }
 
 			outputStream.writeBytes(twoHyphens + boundary + twoHyphens
 					+ lineEnd);
@@ -687,14 +675,16 @@ public class MyProfileActivity extends FragmentActivity {
 			Log.d(TAG, "responsecode=" + responsecode);
 
 			InputStream err = connection.getErrorStream();
-			byte[] buff = new byte[100];
-			int n;
-			StringBuilder sb = new StringBuilder();
-			while ((n = err.read(buff)) != -1) {
-				sb.append(new String(buff, 0, n));
-			}
-			if (sb.length() > 0) {
-				Log.d(TAG, "ERROR PIC UPLOAD:" + sb);
+			if(err != null) {
+				byte[] buff = new byte[100];
+				int n;
+				sb = new StringBuilder();
+				while ((n = err.read(buff)) != -1) {
+					sb.append(new String(buff, 0, n));
+				}
+				if (sb.length() > 0) {
+					Log.d(TAG, "ERROR PIC UPLOAD:" + sb);
+				}
 			}
 
 			inputStream = connection.getInputStream();

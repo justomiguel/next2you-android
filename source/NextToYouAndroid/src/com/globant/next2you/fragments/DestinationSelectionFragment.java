@@ -3,6 +3,7 @@ package com.globant.next2you.fragments;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
@@ -52,6 +53,7 @@ import com.globant.next2you.objects.CreateTravelRequest;
 import com.globant.next2you.objects.CreateTravelResponse;
 import com.globant.next2you.objects.Destination;
 import com.globant.next2you.objects.ListDestinationsResponse;
+import com.globant.next2you.objects.Travel;
 import com.globant.next2you.util.UIUtils;
 import com.google.android.gms.maps.model.LatLngBounds;
 
@@ -304,6 +306,7 @@ public class DestinationSelectionFragment extends BaseFragment {
 									totalInterval);
 							ApiServices.createTravel(App.app().getAuth()
 									.getToken(), request);
+							App.app().userState = State.OFFER;
 							return null;
 						}
 					});
@@ -316,12 +319,19 @@ public class DestinationSelectionFragment extends BaseFragment {
 							R.layout.offer_ride_dialog, dialogHolder);
 
 					// setup views
-					TextView personsCountField = (TextView) offerDialogView
+					final TextView personsCountField = (TextView) offerDialogView
 							.findViewById(R.id.notification_text_2);
-					personsCountField.setText(String.format(
-							Locale.US,
-							ctx.getResources().getString(
-									R.string.offer_ride_persons), 20));
+					App.app().loadOfferedTavels(new UICallback() {
+						
+						@Override
+						public void onResult(Object result) {
+							int cnt = ((ArrayList<Object>)result).size();
+							personsCountField.setText(String.format(
+									Locale.US,
+									ctx.getResources().getString(
+											R.string.offer_ride_persons), cnt));
+						}
+					});
 					UIUtils.prepareTextView(ctx, personsCountField);
 
 					TextView titleLine1 = (TextView) offerDialogView
@@ -436,21 +446,28 @@ public class DestinationSelectionFragment extends BaseFragment {
 					dialogHolder.setVisibility(View.VISIBLE);
 
 					// setup notification text
-					TextView notificationText = (TextView) offerTravelDialog
+					final TextView notificationText = (TextView) offerTravelDialog
 							.findViewById(R.id.notification_text);
 					UIUtils.prepareTextView(ctx, notificationText);
-					String formatted = ctx.getResources().getString(
+					final String formatted = ctx.getResources().getString(
 							R.string.offer_ride_notification_text);
-					// TODO this should be equal to the number of items in the
-					// corresponding tab
-					formatted = String.format(Locale.US, formatted,
-							Integer.valueOf(5));
-					notificationText.setText(Html.fromHtml(formatted));
+					App.app().loadOfferedTavels(new UICallback() {
+						
+						@Override
+						public void onResult(Object result) {
+							int cnt = ((ArrayList<Travel>)result).size();
+							String formattedCnt = String.format(Locale.US, formatted,
+									Integer.valueOf(cnt));
+							notificationText.setText(Html.fromHtml(formattedCnt));
+						}
+					});
 
 					// setup ribbon text
 					TextView ribbonTxt = (TextView) offerTravelDialog
 							.findViewById(R.id.ribbon_text);
 					UIUtils.prepareTextView(ctx, ribbonTxt);
+					
+					// TODO check what to put here instead of hardcoded value
 					ribbonTxt.setText(String.format(Locale.US,
 							ctx.getString(R.string.travels_done),
 							Integer.valueOf(5)));
@@ -514,6 +531,9 @@ public class DestinationSelectionFragment extends BaseFragment {
 				});
 				return null;
 			}
+			
+			App.app().travelDateRequested = new Date(c.getTimeInMillis());
+			
 			return totalInterval;
 		}
 

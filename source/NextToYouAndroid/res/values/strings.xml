@@ -82,8 +82,10 @@
     <string name="ask_ride_pending_travels">Pending travels</string>
     <string name="ask_ride_offered_travels">Offered travels</string>
     <string name="ask_ride_ignore">Ignore</string>
-    <string name="offer_ride">Offer ride</string>
+    <string name="offer_ride">Offer travel</string>
     <string name="old_password">Old password</string>
+    <string name="reject">Reject</string>
+    <string name="approve_travel">Approve travel</string>
     <string name="new_password">New password</string>
     <string name="verify">Verify</string>
     <string name="change_password">Change password</string>

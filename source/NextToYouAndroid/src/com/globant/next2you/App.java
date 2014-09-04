@@ -1,12 +1,22 @@
 package com.globant.next2you;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.concurrent.Callable;
+
 import android.app.Application;
 import android.content.Context;
+import android.util.Log;
 import android.widget.ImageView;
 
+import com.globant.next2you.async.Callback;
 import com.globant.next2you.async.TaskManager;
+import com.globant.next2you.net.ApiServices;
 import com.globant.next2you.objects.CreateUserTokenResponse;
 import com.globant.next2you.objects.Destination;
+import com.globant.next2you.objects.RetrievePendingTravelsResponse;
+import com.globant.next2you.objects.Travel;
+import com.globant.next2you.objects.TravelPersonResponse;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -31,9 +41,65 @@ public class App extends Application {
 	
 	public State userState = State.NONE;
 	public Destination currentDestination = null;
+	public Date travelDateRequested;
+	public ArrayList<Long> ignoreList = new ArrayList<Long>();
 	
 	public enum State {
 		NONE, ASK, OFFER
+	}
+	
+	public Callable<Object> getOfferedTravelsTask() {
+		return new Callable<Object>() {
+			@Override
+			public Object call() throws Exception {
+				TravelPersonResponse response = ApiServices
+						.listSimpleTravels(App.app().getAuth().getToken());
+				if (response != null) {
+					return filterTravelsFromIgnoreList(response.getTravels());
+				}
+				return null;
+			}
+		};
+	}
+	
+	public void loadOfferedTavels(Callback callback) {
+		getTaskManager().assignNet(getOfferedTravelsTask(), callback);
+	}
+	
+	public void loadPendingTavels(Callback callback) {
+		getTaskManager().assignNet(getLoadPendingTravelsTask(), callback);
+	}
+	
+	public Callable<Object> getLoadPendingTravelsTask() {
+		return new Callable<Object>() {
+
+			@Override
+			public Object call() throws Exception {
+				String currentToken = App.app().getAuth().getToken();
+				RetrievePendingTravelsResponse pendingTravels = ApiServices.retrievePendingTravels(currentToken);
+				ArrayList<Travel> travels = pendingTravels != null ? pendingTravels
+						.getTravels() : null;
+				travels = filterTravelsFromIgnoreList(travels);
+				if (travels != null) {
+					Log.d(TAG, "pendingTravels:" + travels.size());
+				}
+				return travels;
+			}
+		};
+	}
+	
+	private ArrayList<Travel> filterTravelsFromIgnoreList(
+			ArrayList<Travel> listToFilter) {
+		if (App.app().ignoreList.isEmpty()) {
+			return listToFilter;
+		}
+		ArrayList<Travel> filteredList = new ArrayList<Travel>();
+		for (Travel t : listToFilter) {
+			if (!App.app().ignoreList.contains(t.getTravelId())) {
+				filteredList.add(t);
+			}
+		}
+		return filteredList;
 	}
 
 	@Override

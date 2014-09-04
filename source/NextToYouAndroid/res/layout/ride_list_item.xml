@@ -2,8 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingLeft="20dp"
-    android:paddingBottom="10dp" >
+    android:paddingBottom="10dp"
+    android:paddingLeft="20dp" >
 
     <!-- avatar widget -->
 
@@ -45,9 +45,9 @@
         android:id="@+id/user_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:layout_toLeftOf="@id/time"
         android:layout_toRightOf="@id/avatar"
-        android:layout_marginTop="20dp"
         android:textColor="@color/black_marker"
         android:textSize="@dimen/text_size_title" />
 
@@ -86,23 +86,29 @@
             android:id="@+id/ignore_request"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
+            android:layout_marginRight="5dp"
             android:layout_marginTop="20dp"
             android:layout_weight="1"
             android:background="@drawable/ride_button_background"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
             android:text="@string/ask_ride_ignore"
-            android:textColor="@color/ask_ride_grey" />
+            android:textColor="@color/ask_ride_grey"
+            android:textSize="12sp" />
 
         <Button
             android:id="@+id/offer_ride"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
+            android:layout_marginLeft="5dp"
             android:layout_marginTop="20dp"
             android:layout_weight="1"
             android:background="@drawable/ride_button_background_active"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
             android:text="@string/offer_ride"
-            android:textColor="@color/offer_ride_green" />
+            android:textColor="@color/offer_ride_green"
+            android:textSize="12sp" />
     </LinearLayout>
 
 </RelativeLayout>
