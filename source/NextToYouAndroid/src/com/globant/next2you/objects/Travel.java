@@ -3,6 +3,16 @@ package com.globant.next2you.objects;
 public class Travel {
 
 	private long travelId;
+	private long travelPersonId;
+	
+	public long getTravelPersonId() {
+		return travelPersonId;
+	}
+
+	public void setTravelPersonId(long travelPersonId) {
+		this.travelPersonId = travelPersonId;
+	}
+
 	private long personId;
 	private String startTime;
 	private String endTime;

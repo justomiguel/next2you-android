@@ -66,6 +66,13 @@ public class FragmentMap extends BaseFragment implements
 	private SupportMapFragment mapFragment;
 	private BroadcastReceiver receiver;
 	private Circle circle;
+	
+	private DestinationSelectionFragment destinationSelectFragment;
+	public DestinationSelectionFragment getDestinationSelectFragment() {
+		return destinationSelectFragment;
+	}
+
+	public boolean isDestinationSelectOnTop = false;
 
 	public FragmentMap() {
 	}
@@ -90,7 +97,7 @@ public class FragmentMap extends BaseFragment implements
 				if (map != null) {
 					try {
 						MapsInitializer.initialize(getActivity());
-					} catch (GooglePlayServicesNotAvailableException e) {
+					} catch (Exception e) {
 						log(e);
 					}
 					addLocationHandler();
@@ -120,10 +127,11 @@ public class FragmentMap extends BaseFragment implements
 				log("'i go to' btn pressed");
 				FragmentTransaction tr = ((FragmentActivity) getActivity())
 						.getSupportFragmentManager().beginTransaction();
-				DestinationSelectionFragment fragment = new DestinationSelectionFragment();
-				tr.replace(android.R.id.content, fragment, fragment.getClass()
+				destinationSelectFragment = new DestinationSelectionFragment();
+				tr.replace(android.R.id.content, destinationSelectFragment, destinationSelectFragment.getClass()
 						.getSimpleName());
 				tr.commit();
+				isDestinationSelectOnTop = true;
 			}
 		});
 

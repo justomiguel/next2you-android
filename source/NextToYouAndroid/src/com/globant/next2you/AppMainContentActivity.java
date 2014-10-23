@@ -1,6 +1,7 @@
 package com.globant.next2you;
 
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -26,13 +28,18 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.globant.next2you.async.UICallback;
 import com.globant.next2you.fragments.AskRideScreen;
+import com.globant.next2you.fragments.DestinationSelectionFragment;
 import com.globant.next2you.fragments.FragmentMap;
+import com.globant.next2you.net.ApiServices;
 import com.globant.next2you.objects.Community;
+import com.globant.next2you.objects.Person;
 import com.globant.next2you.util.UIUtils;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 
@@ -42,6 +49,7 @@ public class AppMainContentActivity extends FragmentActivity {
 	private SlidingMenu slidingMenu;
 	private BroadcastReceiver receiver;
 	private AskRideScreen askRideScreen;
+	private FragmentMap fragmentMap;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +65,8 @@ public class AppMainContentActivity extends FragmentActivity {
 			}
 		};
 		registerReceiver(receiver , new IntentFilter(UPDATE_COMMUNITY));
+		
+		loadCurrentUser();
 		
 		// detect swipe on header view
 //		final GestureDetector gestureDetector = new GestureDetector(this, new MyGestureDetector());
@@ -132,6 +142,41 @@ public class AppMainContentActivity extends FragmentActivity {
 		}
 	}
 	
+	@Override
+	public void onBackPressed() {
+		boolean menuOpened = askRideScreen != null;
+		if(menuOpened) {
+			//If the Offers pop up is opened (AskRideScreen)
+			
+			openCloseAskRideScreen(true);
+		}else if(fragmentMap != null && fragmentMap.getDestinationSelectFragment() != null && fragmentMap.getDestinationSelectFragment().isDropDownExpanded()) {
+			//If the destination select fragment is on the screen and the drop down is expanded
+			//close the drop down
+			fragmentMap.getDestinationSelectFragment().toggleDropDown();
+		}else if(fragmentMap != null && fragmentMap.isDestinationSelectOnTop) {
+			//If the destination select fragment is on the screen
+
+			DestinationSelectionFragment destinationSelectFragment = (DestinationSelectionFragment) getSupportFragmentManager().findFragmentByTag(DestinationSelectionFragment.class.getSimpleName());
+			
+			// trigger refresh of clusters
+			Intent intent = new Intent(
+					GPSCollectorService.BROADCAST_INTENT_FILTER);
+			intent.putExtra(GPSCollectorService.LAT,
+					Float.NaN);
+			intent.putExtra(GPSCollectorService.LON,
+					Float.NaN);
+			AppMainContentActivity.this.sendBroadcast(intent);
+
+			destinationSelectFragment.doGoHome();
+
+		}else {
+			//else close the Activity on back pressed
+			
+			finish();
+		}
+	}
+
+	
 	public void openSection(int idx) {
 		Log.d(TAG, "open section:" + idx);
 		Fragment fragment = null;
@@ -140,7 +185,8 @@ public class AppMainContentActivity extends FragmentActivity {
 		}
 		switch (idx) {
 		case 0:
-			fragment = new FragmentMap();
+			fragmentMap = new FragmentMap();
+			fragment = fragmentMap;
 			findViewById(R.id.subtitle).setVisibility(View.VISIBLE);
 			break;
 		case 1:
@@ -311,4 +357,21 @@ public class AppMainContentActivity extends FragmentActivity {
               return true;
         }
     }
+	
+	private void loadCurrentUser() {
+		App.getTaskManager().assignNet(new Callable<Object>() {
+			@Override
+			public Object call() throws Exception {
+				Person p = ApiServices.getPerson(App.app().getAuth().getToken());
+				return p;
+			}
+		}, new UICallback() {
+
+			@Override
+			public void onResult(Object result) {
+				Person p = ((Person) result);
+				App.app().currentUser = p;
+			}
+		});
+	}
 }

@@ -13,8 +13,10 @@ import java.util.TimeZone;
 import java.util.concurrent.Callable;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
+import android.drm.DrmStore.Action;
 import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.globant.next2you.App;
 import com.globant.next2you.App.State;
 import com.globant.next2you.R;
+import com.globant.next2you.async.Callback;
 import com.globant.next2you.async.UICallback;
 import com.globant.next2you.net.ApiServices;
 import com.globant.next2you.objects.Destination;
@@ -137,44 +140,87 @@ public class AskRideScreen {
 				@Override
 				public void onResult(Object result) {
 					pendingTravels = (ArrayList<Travel>) result;
+					
+					//Fix for server side renamed personId json property to travelPersonId
+					for(Travel travel : pendingTravels) {
+						if(travel.getTravelPersonId() > 0 && travel.getPersonId() == 0) {
+							travel.setPersonId(travel.getTravelPersonId());
+						}
+					}
+					
 					ListView ridesList = (ListView) offerDialogView
 							.findViewById(R.id.rides_list);
 					ridesList.setAdapter(new RidesAdapter(pendingTravels));
 				}
 			});
 		} else {
-			App.app().loadOfferedTavels(new UICallback() {
 
+			App.app().loadPendingTavels(new UICallback() {
 				@Override
 				public void onResult(Object result) {
-					if (result == null) {
-						return;
+					pendingTravels = (ArrayList<Travel>) result;
+					
+					//Fix for server side renamed personId json property to travelPersonId
+					for(Travel travel : pendingTravels) {
+						if(travel.getTravelPersonId() > 0 && travel.getPersonId() == 0) {
+							travel.setPersonId(travel.getTravelPersonId());
+						}
 					}
-					ListView ridesList = (ListView) offerDialogView
-							.findViewById(R.id.rides_list);
-					ArrayList<Travel> travels = (ArrayList<Travel>) result;
-					offeringTravels = filterTravels(travels);
-					ridesList.setAdapter(new RidesAdapter(offeringTravels));
+					
+					App.app().loadOfferedTavels(new UICallback() {
+
+						@Override
+						public void onResult(Object result) {
+							if (result == null) {
+								return;
+							}
+							ListView ridesList = (ListView) offerDialogView
+									.findViewById(R.id.rides_list);
+							ArrayList<Travel> travels = (ArrayList<Travel>) result;
+							offeringTravels = AskRideScreen.filterTravels(travels, pendingTravels);
+							ridesList.setAdapter(new RidesAdapter(offeringTravels));
+						}
+					});
 				}
 			});
 		}
 	}
 	
 
-	private ArrayList<Travel> filterTravels(
-			ArrayList<Travel> listToFilter) {
+	public static ArrayList<Travel> filterTravels(
+			ArrayList<Travel> listToFilter, ArrayList<Travel> pendingTravels) {
+		
+		SimpleDateFormat formatterParser;
+		formatterParser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+		formatterParser.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+		if(pendingTravels == null) {
+			pendingTravels = new ArrayList<Travel>();
+		}
+		
 		ArrayList<Travel> filteredList = new ArrayList<Travel>();
 		
 		for (Travel tp : listToFilter) {
 			App app = App.app();
 			
+			boolean isFiltered = false;
 			// Remove pending travels from the offers array
 			for(Travel pendingTravel : pendingTravels) {
-				long otherPersonId = pendingTravel.getPersonIdToBeApproved();
+				long otherPersonId = 0;
+				if(pendingTravel.getPersonId() == app.currentUser.getPersonId()) {
+					otherPersonId = pendingTravel.getPersonIdToBeApproved();
+				}else {
+					otherPersonId = pendingTravel.getPersonId();
+				}
+
 				//Remove pending travels with other person identifier equal to the travel offer person identifier
 				if(tp.getPersonId() == otherPersonId) {
-					continue;
+					isFiltered = true;
+					break;
 				}
+			}
+			if(isFiltered == true) {
+				continue;
 			}
 			
 			// Remove the owner travels
@@ -202,13 +248,13 @@ public class AskRideScreen {
 
 			// Remove all travels with destination different from ours
 			Destination curDest = app.currentDestination;
-			if (tp.getFromLatitude() > 0
-					&& tp.getFromLongitude() > 0
-					&& tp.getToLatitude() > 0
-					&& tp.getToLongitude() > 0
+			if (curDest.getLatitude() != 0
+					&& curDest.getLongitude() != 0
+					&& tp.getToLatitude() != 0
+					&& tp.getToLongitude() != 0
 					&& Math.abs(tp.getToLatitude() - curDest.getLatitude()) > DELTA_LOC_MAX_DIFF
 					&& Math.abs(tp.getToLongitude() - curDest.getLongitude()) > DELTA_LOC_MAX_DIFF) {
-				Log.d(TAG, "filter travel because of location coordinate " + tp);
+				Log.d(TAG, "filter travel because of location coordinate tp lat:" + tp.getToLatitude() + "lon:" + tp.getToLongitude() + "curDest lat:" + curDest.getLatitude() + "curDest lon:" + curDest.getLongitude());
 				continue;
 			}
 			
@@ -218,9 +264,10 @@ public class AskRideScreen {
 				try {
 					Date travelStartTime = formatterParser.parse(tp.getStartTime());
 					long travelTimeStamp = travelStartTime.getTime();
-					long curTravelTimeStamp = app.travelDateRequested.getTime();
+					long curTravelTimeStamp =  app.travelDateRequested.getTime();//app.travelDateTimestamp;
 					if(Math.abs(travelTimeStamp - curTravelTimeStamp) > MIN_TIME_INTERVAL_DIFF)
 					{
+						Log.d(TAG, "filter travel because of time. Travel start time :" + travelTimeStamp + " user searched timestamp:" + curTravelTimeStamp);
 						continue;
 					}
 				} catch (ParseException e) {
@@ -360,6 +407,15 @@ public class AskRideScreen {
 					} else {
 						if(App.app().userState == State.OFFER) {
 							leftBtn.setVisibility(View.VISIBLE);
+							leftBtn.setOnClickListener(new OnClickListener() {
+								@Override
+								public void onClick(View v) {
+									// ignore action
+									Log.d(TAG, "add to ignore list");
+									App.app().ignoreList.add(travel.getTravelId());
+									loadPeople();
+								}
+							});
 							rightBtn.setVisibility(View.GONE);
 						} else {
 							leftBtn.setVisibility(View.VISIBLE);
@@ -379,6 +435,19 @@ public class AskRideScreen {
 												Log.d(TAG, "subscribe for travel result:" + res);
 												return null;
 											}
+										}, new Callback() {
+											
+											@Override
+											public void onResult(Object result) {
+												if(getContext() != null) {
+													((Activity)getContext()).runOnUiThread(new Runnable() {
+														@Override
+														public void run() {
+															loadPeople();
+														}
+													});
+												}
+											}
 										});
 									}
 								}
@@ -390,7 +459,7 @@ public class AskRideScreen {
 								// ignore action
 								Log.d(TAG, "add to ignore list");
 								App.app().ignoreList.add(travel.getTravelId());
-								// TODO reload tab
+								loadPeople();
 							}
 						});
 					}
@@ -399,7 +468,7 @@ public class AskRideScreen {
 				private void setupButtonsForPendingTab(final Button leftBtn,
 						final Button rightBtn, Person p, Travel travel) {
 					int visibility;
-					if(p.getPersonId() == travel.getPersonIdToBeApproved()) {
+					if(App.app().userState == State.OFFER) {
 						visibility = View.VISIBLE;
 						leftBtn.setOnClickListener(new OnClickListener() {
 							@Override

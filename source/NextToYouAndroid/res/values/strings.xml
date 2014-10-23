@@ -53,7 +53,15 @@
         	<font color="#693690">which are going to your<br/>destination and which are<br/> near you now</font>
         ]]>
     </string>
-    
+
+    <string name="offer_ride_notification_text_single">
+         <![CDATA[
+        	<font color="#693690">You asked to share your<br/> travel with:</font> 
+        	<font color="#46d055"><b>%d person</b></font><br/>
+        	<font color="#693690">which is going to your<br/>destination and which is<br/> near you now</font>
+        ]]>
+    </string>
+
     <string name="invalid_timespan_selected">Invalid timespan has been selected</string>
     
     <string name="main_content_community_globant">Community</string>
@@ -71,7 +79,9 @@
     <!-- Offer a ride -->
     <string name="offer_ride_description">You offered to share travel:</string>
     <string name="offer_ride_persons">%d persons</string>
+    <string name="offer_ride_person">%d person</string>
     <string name="offer_ride_go_to_your_direction">which are going to your direction</string>
+    <string name="offer_ride_go_to_your_direction_single">which is going to your direction</string>
     <string name="offer_ride_travels_completed">
         <![CDATA[
         	<big>%d</big> travels shared 
@@ -110,4 +120,7 @@
     <string name="my_profile_fill_email">Please fill in your email</string>
     <string name="my_profile_fill_nickname">Please fill in your nickname</string>
     <string name="my_profile_fill_address">Please fill in your home address</string>
+    
+    <!-- home destination -->
+    <string name="home_destination">Home</string>
 </resources>

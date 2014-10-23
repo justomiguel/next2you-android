@@ -15,6 +15,7 @@ import com.globant.next2you.async.TaskManager;
 import com.globant.next2you.net.ApiServices;
 import com.globant.next2you.objects.CreateUserTokenResponse;
 import com.globant.next2you.objects.Destination;
+import com.globant.next2you.objects.Person;
 import com.globant.next2you.objects.RetrievePendingTravelsResponse;
 import com.globant.next2you.objects.Travel;
 import com.globant.next2you.objects.TravelPersonResponse;
@@ -40,9 +41,11 @@ public class App extends Application {
 	private static App app;
 	private static final String SHARED_PREFS_NEXT2YOU = "next2you_app";
 	
+	public Person currentUser;
 	public State userState = State.NONE;
 	public Destination currentDestination = null;
 	public Date travelDateRequested;
+//	public long travelDateTimestamp;
 	public ArrayList<Long> ignoreList = new ArrayList<Long>();
 
 	public enum State {

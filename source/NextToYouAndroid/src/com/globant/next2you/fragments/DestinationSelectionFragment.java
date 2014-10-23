@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.Callable;
 
 import android.annotation.SuppressLint;
@@ -44,6 +45,7 @@ import com.globant.next2you.App.State;
 import com.globant.next2you.AppMainContentActivity;
 import com.globant.next2you.GPSCollectorService;
 import com.globant.next2you.R;
+import com.globant.next2you.async.Callback;
 import com.globant.next2you.async.UICallback;
 import com.globant.next2you.kankan.wheel.widget.OnWheelChangedListener;
 import com.globant.next2you.kankan.wheel.widget.WheelView;
@@ -63,6 +65,8 @@ public class DestinationSelectionFragment extends BaseFragment {
 	private boolean listExpanded = false;
 	private ListView destinationsList;
 	private View timerSetContainer;
+	
+	private ImageView arrowDropDownImage;
 
 	@SuppressLint("InflateParams")
 	@Override
@@ -100,6 +104,14 @@ public class DestinationSelectionFragment extends BaseFragment {
 			public void onResult(Object result) {
 				ListDestinationsResponse dest = (ListDestinationsResponse) result;
 				ArrayList<Destination> destinations = dest.getDestinations();
+				double homeLat = 0;
+				double homeLon = 0;
+				if(App.app().currentUser != null) {
+					homeLat = App.app().currentUser.getLatitude();
+					homeLon = App.app().currentUser.getLongitude();
+				}
+				Destination homeDestination = new Destination(0, getString(R.string.home_destination), "", homeLat, homeLon, "", "", 0, "", "", "", "");
+				destinations.add(0, homeDestination);
 				if(destinations.size() > 0) {
 					App.app().currentDestination = destinations.get(0);
 				}
@@ -110,13 +122,12 @@ public class DestinationSelectionFragment extends BaseFragment {
 							@Override
 							public void onItemClick(AdapterView<?> arg0,
 									View arg1, int pos, long arg3) {
-								if (pos == adapter.selectedPos) {
-									adapter.selectedPos = -1;
-								} else {
+								if (pos != adapter.selectedPos) {
 									adapter.selectedPos = pos;
-								}
-								if(adapter.selectedPos != -1) {
-									adapter.putFirst(adapter.selectedPos);
+									if(pos >= 0 && pos < adapter.getCount()) {
+										adapter.putFirst(adapter.selectedPos);
+										adapter.selectedPos = 0;
+									}
 								}
 								adapter.notifyDataSetChanged();
 							}
@@ -129,9 +140,30 @@ public class DestinationSelectionFragment extends BaseFragment {
 		return rootView;
 	}
 
-	private void doGoHome() {
+	public boolean isDropDownExpanded() {
+		return listExpanded;
+	}
+	
+	public void doGoHome() {
 		AppMainContentActivity activity = (AppMainContentActivity) getActivity();
 		activity.initAndOpenMapScreen();
+	}
+	
+	public void toggleDropDown(){
+		listExpanded = !listExpanded;
+		arrowDropDownImage.setImageResource(listExpanded ? R.drawable.arrow_up : R.drawable.arrow_down);
+		BaseAdapter adapter = (BaseAdapter) destinationsList
+				.getAdapter();
+		adapter.notifyDataSetChanged();
+		int bCol = getActivity().getResources().getColor(listExpanded ? 
+				R.color.shadow : R.color.login_background);
+		destinationsList.setBackgroundColor(bCol);
+		
+		RelativeLayout.LayoutParams params = (android.widget.RelativeLayout.LayoutParams) destinationsList
+				.getLayoutParams();
+		params.height = listExpanded ? android.widget.RelativeLayout.LayoutParams.MATCH_PARENT
+				: android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT;
+		destinationsList.setLayoutParams(params);
 	}
 
 	@Override
@@ -290,105 +322,7 @@ public class DestinationSelectionFragment extends BaseFragment {
 				@Override
 				public void onClick(View v) {
 					final Context ctx = v.getContext();
-					final String totalInterval = getTotalInterval(wh1, wh2, wh3);
-					if (totalInterval == null) {
-						return;
-					}
-					App.getTaskManager().assignNet(new Callable<Object>() {
-						@Override
-						public Object call() throws Exception {
-							LatLngBounds bounds = App.app().mapBounds;
-							CreateTravelRequest request = new CreateTravelRequest(
-									bounds.northeast.latitude,
-									bounds.northeast.longitude,
-									bounds.southwest.latitude,
-									bounds.southwest.longitude, true,
-									totalInterval);
-							ApiServices.createTravel(App.app().getAuth()
-									.getToken(), request);
-							App.app().userState = State.OFFER;
-							return null;
-						}
-					});
-
-					LayoutInflater inflater = LayoutInflater.from(ctx);
-					final LinearLayout dialogHolder = (LinearLayout) holder
-							.findViewById(R.id.dialog_holder);
-					dialogHolder.removeAllViews();
-					final View offerDialogView = inflater.inflate(
-							R.layout.offer_ride_dialog, dialogHolder);
-
-					// setup views
-					final TextView personsCountField = (TextView) offerDialogView
-							.findViewById(R.id.notification_text_2);
-					App.app().loadOfferedTavels(new UICallback() {
-						
-						@Override
-						public void onResult(Object result) {
-							int cnt = ((ArrayList<Object>)result).size();
-							personsCountField.setText(String.format(
-									Locale.US,
-									ctx.getResources().getString(
-											R.string.offer_ride_persons), cnt));
-						}
-					});
-					UIUtils.prepareTextView(ctx, personsCountField);
-
-					TextView titleLine1 = (TextView) offerDialogView
-							.findViewById(R.id.notification_text);
-					TextView titleLine3 = (TextView) offerDialogView
-							.findViewById(R.id.notification_text_3);
-					UIUtils.prepareTextView(ctx, titleLine1);
-					UIUtils.prepareTextView(ctx, titleLine3);
-
-					// dialogHolder.addView(offerDialogView);
-					dialogHolder.setVisibility(View.VISIBLE);
-
-					TextView ribbonText = (TextView) offerDialogView
-							.findViewById(R.id.ribbon_text);
-					UIUtils.prepareTextView(ctx, ribbonText);
-					String format = ctx
-							.getString(R.string.offer_ride_travels_completed);
-					String formatted = String.format(Locale.US, format, 15);
-					ribbonText.setText(Html.fromHtml(formatted));
-
-					TextView congratsTxt = (TextView) offerDialogView
-							.findViewById(R.id.contgrats_improve);
-					UIUtils.prepareTextView(ctx, congratsTxt);
-
-					offerDialogView.findViewById(R.id.close_notification)
-							.setOnClickListener(new OnClickListener() {
-								@Override
-								public void onClick(View v) {
-									dialogHolder.removeView(offerDialogView);
-									dialogHolder.setVisibility(View.GONE);
-								}
-							});
-
-					offerDialogView.findViewById(R.id.share_fb_btn)
-							.setOnClickListener(new OnClickListener() {
-								@Override
-								public void onClick(View v) {
-									shareToFbWall(ctx);
-								}
-							});
-
-					offerDialogView.findViewById(R.id.share_twitter_btn)
-							.setOnClickListener(new OnClickListener() {
-								@Override
-								public void onClick(View v) {
-									postTweet(ctx);
-								}
-							});
-				}
-			});
-
-			Button askBtn = (Button) rootView.findViewById(R.id.travel_ask);
-			UIUtils.prepareTextView(ctx, askBtn);
-			askBtn.setOnClickListener(new OnClickListener() {
-
-				@Override
-				public void onClick(final View v) {
+					App.app().ignoreList.clear();
 					App.getTaskManager().assignNet(new Callable<Object>() {
 						@Override
 						public Object call() throws Exception {
@@ -408,7 +342,10 @@ public class DestinationSelectionFragment extends BaseFragment {
 								toLatitude = selectedDest.getLatitude();
 								toLongitude = selectedDest.getLongitude();
 							}
-							if (selectedDest.getName().toLowerCase().equals("casa")) {
+							
+							String homeDestinationName = DestinationSelectionFragment.this.getString(R.string.home_destination);
+							
+							if (selectedDest.getName().toLowerCase().equals(homeDestinationName)) {
 								toLatitude = App.app().userLocation.latitude;
 								toLongitude = App.app().userLocation.longitude;
 							}
@@ -416,12 +353,154 @@ public class DestinationSelectionFragment extends BaseFragment {
 							CreateTravelRequest request = new CreateTravelRequest(
 									bounds.northeast.latitude,
 									bounds.northeast.longitude,
-									toLongitude,
-									toLatitude, true,
+									toLatitude,
+									toLongitude, true,
+									totalInterval);
+							ApiServices.createTravel(App.app().getAuth()
+									.getToken(), request);
+							App.app().userState = State.OFFER;
+							return null;
+						}
+					}, new Callback() {
+						
+						@Override
+						public void onResult(Object result) {
+							DestinationSelectionFragment.this.getActivity().runOnUiThread(new Runnable() {
+								
+								@Override
+								public void run() {
+									LayoutInflater inflater = LayoutInflater.from(ctx);
+									final LinearLayout dialogHolder = (LinearLayout) holder
+											.findViewById(R.id.dialog_holder);
+									dialogHolder.removeAllViews();
+									final View offerDialogView = inflater.inflate(
+											R.layout.offer_ride_dialog, dialogHolder);
+
+									// setup views
+									final TextView personsCountField = (TextView) offerDialogView
+											.findViewById(R.id.notification_text_2);
+
+									UIUtils.prepareTextView(ctx, personsCountField);
+
+									TextView titleLine1 = (TextView) offerDialogView
+											.findViewById(R.id.notification_text);
+									final TextView titleLine3 = (TextView) offerDialogView
+											.findViewById(R.id.notification_text_3);
+									UIUtils.prepareTextView(ctx, titleLine1);
+									UIUtils.prepareTextView(ctx, titleLine3);
+
+									App.app().loadOfferedTavels(new UICallback() {
+										
+										@Override
+										public void onResult(Object result) {
+											int cnt = (AskRideScreen.filterTravels((ArrayList<Travel>)result, null)).size();
+											if(cnt > 1 || cnt == 0) {
+												personsCountField.setText(String.format(
+														Locale.US,
+														ctx.getResources().getString(
+																R.string.offer_ride_persons), cnt));
+												titleLine3.setText(ctx.getResources().getString(R.string.offer_ride_go_to_your_direction));
+											}else if (cnt == 1) {
+												personsCountField.setText(String.format(
+														Locale.US,
+														ctx.getResources().getString(
+																R.string.offer_ride_person), cnt));
+												titleLine3.setText(ctx.getResources().getString(R.string.offer_ride_go_to_your_direction_single));
+											}
+										}
+									});
+									
+									// dialogHolder.addView(offerDialogView);
+									dialogHolder.setVisibility(View.VISIBLE);
+
+									TextView ribbonText = (TextView) offerDialogView
+											.findViewById(R.id.ribbon_text);
+									UIUtils.prepareTextView(ctx, ribbonText);
+									String format = ctx
+											.getString(R.string.offer_ride_travels_completed);
+									String formatted = String.format(Locale.US, format, 15);
+									ribbonText.setText(Html.fromHtml(formatted));
+
+									TextView congratsTxt = (TextView) offerDialogView
+											.findViewById(R.id.contgrats_improve);
+									UIUtils.prepareTextView(ctx, congratsTxt);
+
+									offerDialogView.findViewById(R.id.close_notification)
+											.setOnClickListener(new OnClickListener() {
+												@Override
+												public void onClick(View v) {
+													dialogHolder.removeView(offerDialogView);
+													dialogHolder.setVisibility(View.GONE);
+												}
+											});
+
+									offerDialogView.findViewById(R.id.share_fb_btn)
+											.setOnClickListener(new OnClickListener() {
+												@Override
+												public void onClick(View v) {
+													shareToFbWall(ctx);
+												}
+											});
+
+									offerDialogView.findViewById(R.id.share_twitter_btn)
+											.setOnClickListener(new OnClickListener() {
+												@Override
+												public void onClick(View v) {
+													postTweet(ctx);
+												}
+											});
+									}
+							});
+
+						}
+					});
+				}
+			});
+
+			Button askBtn = (Button) rootView.findViewById(R.id.travel_ask);
+			UIUtils.prepareTextView(ctx, askBtn);
+			askBtn.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(final View v) {
+					
+					App.app().ignoreList.clear();
+					
+					App.getTaskManager().assignNet(new Callable<Object>() {
+						@Override
+						public Object call() throws Exception {
+							LatLngBounds bounds = App.app().mapBounds;
+							String totalInterval = getTotalInterval(wh1, wh2,
+									wh3);
+							if (totalInterval == null) {
+								return null;
+							}
+							double toLongitude = 0;
+							double toLatitude = 0;
+							Destination selectedDest = destinations
+									.get(selectedPos);
+							
+							App.app().currentDestination = selectedDest;
+							if (selectedDest != null) {
+								toLatitude = selectedDest.getLatitude();
+								toLongitude = selectedDest.getLongitude();
+							}
+							String homeDestinationName = DestinationSelectionFragment.this.getString(R.string.home_destination);
+							if (selectedDest.getName().toLowerCase().equals(homeDestinationName)) {
+								toLatitude = App.app().userLocation.latitude;
+								toLongitude = App.app().userLocation.longitude;
+							}
+							
+							CreateTravelRequest request = new CreateTravelRequest(
+									bounds.northeast.latitude,
+									bounds.northeast.longitude,
+									toLatitude,
+									toLongitude, false,
 									totalInterval);
 							CreateTravelResponse createTravelResponse = ApiServices
 									.createTravel(App.app().getAuth()
 											.getToken(), request);
+							
 							return createTravelResponse;
 						}
 					}, new UICallback() {
@@ -449,16 +528,25 @@ public class DestinationSelectionFragment extends BaseFragment {
 					final TextView notificationText = (TextView) offerTravelDialog
 							.findViewById(R.id.notification_text);
 					UIUtils.prepareTextView(ctx, notificationText);
-					final String formatted = ctx.getResources().getString(
-							R.string.offer_ride_notification_text);
 					App.app().loadOfferedTavels(new UICallback() {
 						
 						@Override
 						public void onResult(Object result) {
-							int cnt = ((ArrayList<Travel>)result).size();
-							String formattedCnt = String.format(Locale.US, formatted,
-									Integer.valueOf(cnt));
-							notificationText.setText(Html.fromHtml(formattedCnt));
+							int cnt = (AskRideScreen.filterTravels((ArrayList<Travel>)result, null)).size();
+
+							if(cnt > 1 || cnt == 0) {
+								String formatted = ctx.getResources().getString(
+										R.string.offer_ride_notification_text);
+								String formattedCnt = String.format(Locale.US, formatted,
+										Integer.valueOf(cnt));
+								notificationText.setText(Html.fromHtml(formattedCnt));
+							}else if(cnt == 1) {
+								String formatted = ctx.getResources().getString(
+										R.string.offer_ride_notification_text_single);
+								String formattedCnt = String.format(Locale.US, formatted,
+										Integer.valueOf(cnt));
+								notificationText.setText(Html.fromHtml(formattedCnt));
+							}
 						}
 					});
 
@@ -532,6 +620,7 @@ public class DestinationSelectionFragment extends BaseFragment {
 				return null;
 			}
 			
+//			App.app().travelDateTimestamp = c.getTimeInMillis();// - c.getTimeZone().getOffset(c.getTimeInMillis());
 			App.app().travelDateRequested = new Date(c.getTimeInMillis());
 			
 			return totalInterval;
@@ -639,34 +728,20 @@ public class DestinationSelectionFragment extends BaseFragment {
 			UIUtils.prepareTextView(ctx, title);
 			title.setText(destinations.get(position).getName());
 
-			final ImageView img = (ImageView) view.findViewById(R.id.img);
-			img.setImageResource(listExpanded ? R.drawable.arrow_up : R.drawable.arrow_down);
-			img.setTag(Integer.valueOf(position));
-			img.setClickable(true);
-			img.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
-			img.setOnClickListener(new OnClickListener() {
+			arrowDropDownImage = (ImageView) view.findViewById(R.id.img);
+			arrowDropDownImage.setImageResource(listExpanded ? R.drawable.arrow_up : R.drawable.arrow_down);
+			arrowDropDownImage.setTag(Integer.valueOf(position));
+			arrowDropDownImage.setClickable(true);
+			arrowDropDownImage.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+			arrowDropDownImage.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					listExpanded = !listExpanded;
-					img.setImageResource(listExpanded ? R.drawable.arrow_up : R.drawable.arrow_down);
-					BaseAdapter adapter = (BaseAdapter) destinationsList
-							.getAdapter();
-					adapter.notifyDataSetChanged();
-					int bCol = ctx.getResources().getColor(listExpanded ? 
-							R.color.shadow : R.color.login_background);
-					destinationsList.setBackgroundColor(bCol);
-					
-					RelativeLayout.LayoutParams params = (android.widget.RelativeLayout.LayoutParams) destinationsList
-							.getLayoutParams();
-					params.height = listExpanded ? android.widget.RelativeLayout.LayoutParams.MATCH_PARENT
-							: android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT;
-					destinationsList.setLayoutParams(params);
-
+					toggleDropDown();
 				}
 			});
 			
 			title.setTextColor(Color.WHITE);
-			img.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+			arrowDropDownImage.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
 
 			return view;
 		}
